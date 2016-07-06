@@ -250,3 +250,7 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+/IXP220
+/Exports
+/Database
+/TM_Impronet_Interface/Database
