@@ -1,5 +1,8 @@
-﻿namespace TM_Impronet_Interface.Classes
+﻿using System;
+
+namespace TM_Impronet_Interface.Classes
 {
+    [Serializable]
     public class Department
     {
         public int Id { get; set; }

@@ -165,5 +165,53 @@ namespace TM_Impronet_Interface.Properties {
                 this["SyncEnabled"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public byte MappingConfig {
+            get {
+                return ((byte)(this["MappingConfig"]));
+            }
+            set {
+                this["MappingConfig"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DepAccessControlCode {
+            get {
+                return ((string)(this["DepAccessControlCode"]));
+            }
+            set {
+                this["DepAccessControlCode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DepTimeAndAttendanceCode {
+            get {
+                return ((string)(this["DepTimeAndAttendanceCode"]));
+            }
+            set {
+                this["DepTimeAndAttendanceCode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SyncAccessControl {
+            get {
+                return ((bool)(this["SyncAccessControl"]));
+            }
+            set {
+                this["SyncAccessControl"] = value;
+            }
+        }
     }
 }

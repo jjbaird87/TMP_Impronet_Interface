@@ -84,14 +84,31 @@
             this.radSql = new System.Windows.Forms.RadioButton();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.radUseDepartmentMapping = new System.Windows.Forms.RadioButton();
+            this.radUseStandardMapping = new System.Windows.Forms.RadioButton();
+            this.tabctrlMappings = new System.Windows.Forms.TabControl();
+            this.tabpgStandardMapping = new System.Windows.Forms.TabPage();
+            this.tabpgDepartmentMapping = new System.Windows.Forms.TabPage();
+            this.btnDepMappingsDeselectAll = new System.Windows.Forms.Button();
+            this.btnDepMappingsSelectAll = new System.Windows.Forms.Button();
+            this.label17 = new System.Windows.Forms.Label();
+            this.treeDepMappings = new System.Windows.Forms.TreeView();
+            this.btnDepFetchMappings = new System.Windows.Forms.Button();
+            this.btnDepMappingsRefresh = new System.Windows.Forms.Button();
+            this.btnDepMappingsSave = new System.Windows.Forms.Button();
+            this.txtDepMappingAccessControlCode = new System.Windows.Forms.TextBox();
+            this.txtDepMappingTimeAndAttendanceCode = new System.Windows.Forms.TextBox();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnDeselctAll = new System.Windows.Forms.Button();
+            this.btnSelectAll = new System.Windows.Forms.Button();
             this.btnRefreshDepartments = new System.Windows.Forms.Button();
             this.label12 = new System.Windows.Forms.Label();
             this.chkDepartments = new System.Windows.Forms.CheckedListBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.chkSynEmployees = new System.Windows.Forms.CheckBox();
-            this.btnSelectAll = new System.Windows.Forms.Button();
-            this.btnDeselctAll = new System.Windows.Forms.Button();
+            this.chkSyncAccessControlDevices = new System.Windows.Forms.CheckBox();
             this.grpImportSettings.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -103,6 +120,9 @@
             this.groupBox1.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.tabctrlMappings.SuspendLayout();
+            this.tabpgStandardMapping.SuspendLayout();
+            this.tabpgDepartmentMapping.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.SuspendLayout();
@@ -408,7 +428,7 @@
             this.gridMappings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridMappings.Location = new System.Drawing.Point(6, 35);
             this.gridMappings.Name = "gridMappings";
-            this.gridMappings.Size = new System.Drawing.Size(437, 417);
+            this.gridMappings.Size = new System.Drawing.Size(796, 325);
             this.gridMappings.TabIndex = 20;
             // 
             // label9
@@ -653,10 +673,9 @@
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.gridMappings);
-            this.tabPage1.Controls.Add(this.btnRefresh);
-            this.tabPage1.Controls.Add(this.btnSave);
-            this.tabPage1.Controls.Add(this.btnFetchReaders);
+            this.tabPage1.Controls.Add(this.radUseDepartmentMapping);
+            this.tabPage1.Controls.Add(this.radUseStandardMapping);
+            this.tabPage1.Controls.Add(this.tabctrlMappings);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
@@ -664,6 +683,176 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Device Mappings";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // radUseDepartmentMapping
+            // 
+            this.radUseDepartmentMapping.AutoSize = true;
+            this.radUseDepartmentMapping.Location = new System.Drawing.Point(128, 7);
+            this.radUseDepartmentMapping.Name = "radUseDepartmentMapping";
+            this.radUseDepartmentMapping.Size = new System.Drawing.Size(124, 17);
+            this.radUseDepartmentMapping.TabIndex = 25;
+            this.radUseDepartmentMapping.TabStop = true;
+            this.radUseDepartmentMapping.Text = "Department Mapping";
+            this.radUseDepartmentMapping.UseVisualStyleBackColor = true;
+            this.radUseDepartmentMapping.CheckedChanged += new System.EventHandler(this.radUseDepartmentMapping_CheckedChanged);
+            // 
+            // radUseStandardMapping
+            // 
+            this.radUseStandardMapping.AutoSize = true;
+            this.radUseStandardMapping.Location = new System.Drawing.Point(6, 7);
+            this.radUseStandardMapping.Name = "radUseStandardMapping";
+            this.radUseStandardMapping.Size = new System.Drawing.Size(112, 17);
+            this.radUseStandardMapping.TabIndex = 24;
+            this.radUseStandardMapping.TabStop = true;
+            this.radUseStandardMapping.Text = "Standard Mapping";
+            this.radUseStandardMapping.UseVisualStyleBackColor = true;
+            this.radUseStandardMapping.CheckedChanged += new System.EventHandler(this.radUseStandardMapping_CheckedChanged);
+            // 
+            // tabctrlMappings
+            // 
+            this.tabctrlMappings.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
+            this.tabctrlMappings.Controls.Add(this.tabpgStandardMapping);
+            this.tabctrlMappings.Controls.Add(this.tabpgDepartmentMapping);
+            this.tabctrlMappings.Location = new System.Drawing.Point(0, 30);
+            this.tabctrlMappings.Name = "tabctrlMappings";
+            this.tabctrlMappings.SelectedIndex = 0;
+            this.tabctrlMappings.Size = new System.Drawing.Size(816, 394);
+            this.tabctrlMappings.TabIndex = 23;
+            // 
+            // tabpgStandardMapping
+            // 
+            this.tabpgStandardMapping.Controls.Add(this.btnFetchReaders);
+            this.tabpgStandardMapping.Controls.Add(this.gridMappings);
+            this.tabpgStandardMapping.Controls.Add(this.btnSave);
+            this.tabpgStandardMapping.Controls.Add(this.btnRefresh);
+            this.tabpgStandardMapping.Location = new System.Drawing.Point(4, 25);
+            this.tabpgStandardMapping.Name = "tabpgStandardMapping";
+            this.tabpgStandardMapping.Padding = new System.Windows.Forms.Padding(3);
+            this.tabpgStandardMapping.Size = new System.Drawing.Size(808, 365);
+            this.tabpgStandardMapping.TabIndex = 0;
+            this.tabpgStandardMapping.Text = "tabPage6";
+            this.tabpgStandardMapping.UseVisualStyleBackColor = true;
+            // 
+            // tabpgDepartmentMapping
+            // 
+            this.tabpgDepartmentMapping.Controls.Add(this.btnDepMappingsDeselectAll);
+            this.tabpgDepartmentMapping.Controls.Add(this.btnDepMappingsSelectAll);
+            this.tabpgDepartmentMapping.Controls.Add(this.label17);
+            this.tabpgDepartmentMapping.Controls.Add(this.treeDepMappings);
+            this.tabpgDepartmentMapping.Controls.Add(this.btnDepFetchMappings);
+            this.tabpgDepartmentMapping.Controls.Add(this.btnDepMappingsRefresh);
+            this.tabpgDepartmentMapping.Controls.Add(this.btnDepMappingsSave);
+            this.tabpgDepartmentMapping.Controls.Add(this.txtDepMappingAccessControlCode);
+            this.tabpgDepartmentMapping.Controls.Add(this.txtDepMappingTimeAndAttendanceCode);
+            this.tabpgDepartmentMapping.Controls.Add(this.label16);
+            this.tabpgDepartmentMapping.Controls.Add(this.label15);
+            this.tabpgDepartmentMapping.Location = new System.Drawing.Point(4, 25);
+            this.tabpgDepartmentMapping.Name = "tabpgDepartmentMapping";
+            this.tabpgDepartmentMapping.Padding = new System.Windows.Forms.Padding(3);
+            this.tabpgDepartmentMapping.Size = new System.Drawing.Size(808, 365);
+            this.tabpgDepartmentMapping.TabIndex = 1;
+            this.tabpgDepartmentMapping.Text = "tabPage7";
+            this.tabpgDepartmentMapping.UseVisualStyleBackColor = true;
+            // 
+            // btnDepMappingsDeselectAll
+            // 
+            this.btnDepMappingsDeselectAll.Location = new System.Drawing.Point(598, 63);
+            this.btnDepMappingsDeselectAll.Name = "btnDepMappingsDeselectAll";
+            this.btnDepMappingsDeselectAll.Size = new System.Drawing.Size(204, 23);
+            this.btnDepMappingsDeselectAll.TabIndex = 10;
+            this.btnDepMappingsDeselectAll.Text = "Deselect All";
+            this.btnDepMappingsDeselectAll.UseVisualStyleBackColor = true;
+            this.btnDepMappingsDeselectAll.Click += new System.EventHandler(this.btnDepMappingsDeselectAll_Click);
+            // 
+            // btnDepMappingsSelectAll
+            // 
+            this.btnDepMappingsSelectAll.Location = new System.Drawing.Point(388, 63);
+            this.btnDepMappingsSelectAll.Name = "btnDepMappingsSelectAll";
+            this.btnDepMappingsSelectAll.Size = new System.Drawing.Size(204, 23);
+            this.btnDepMappingsSelectAll.TabIndex = 9;
+            this.btnDepMappingsSelectAll.Text = "Select All";
+            this.btnDepMappingsSelectAll.UseVisualStyleBackColor = true;
+            this.btnDepMappingsSelectAll.Click += new System.EventHandler(this.btnDepMappingsSelectAll_Click);
+            // 
+            // label17
+            // 
+            this.label17.Location = new System.Drawing.Point(6, 55);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(323, 31);
+            this.label17.TabIndex = 8;
+            this.label17.Text = "Select the time and attendance devices per department: (Unselected devices are tr" +
+    "eated as access control devices)";
+            // 
+            // treeDepMappings
+            // 
+            this.treeDepMappings.Location = new System.Drawing.Point(6, 92);
+            this.treeDepMappings.Name = "treeDepMappings";
+            this.treeDepMappings.Size = new System.Drawing.Size(796, 265);
+            this.treeDepMappings.TabIndex = 7;
+            this.treeDepMappings.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeDepMappings_AfterCheck);
+            // 
+            // btnDepFetchMappings
+            // 
+            this.btnDepFetchMappings.Location = new System.Drawing.Point(6, 11);
+            this.btnDepFetchMappings.Name = "btnDepFetchMappings";
+            this.btnDepFetchMappings.Size = new System.Drawing.Size(101, 23);
+            this.btnDepFetchMappings.TabIndex = 6;
+            this.btnDepFetchMappings.Text = "Fetch Mappings";
+            this.btnDepFetchMappings.UseVisualStyleBackColor = true;
+            this.btnDepFetchMappings.Click += new System.EventHandler(this.btnDepFetchMappings_Click);
+            // 
+            // btnDepMappingsRefresh
+            // 
+            this.btnDepMappingsRefresh.Location = new System.Drawing.Point(220, 11);
+            this.btnDepMappingsRefresh.Name = "btnDepMappingsRefresh";
+            this.btnDepMappingsRefresh.Size = new System.Drawing.Size(101, 23);
+            this.btnDepMappingsRefresh.TabIndex = 5;
+            this.btnDepMappingsRefresh.Text = "Refresh";
+            this.btnDepMappingsRefresh.UseVisualStyleBackColor = true;
+            // 
+            // btnDepMappingsSave
+            // 
+            this.btnDepMappingsSave.Location = new System.Drawing.Point(113, 11);
+            this.btnDepMappingsSave.Name = "btnDepMappingsSave";
+            this.btnDepMappingsSave.Size = new System.Drawing.Size(101, 23);
+            this.btnDepMappingsSave.TabIndex = 4;
+            this.btnDepMappingsSave.Text = "Save";
+            this.btnDepMappingsSave.UseVisualStyleBackColor = true;
+            this.btnDepMappingsSave.Click += new System.EventHandler(this.btnDepMappingsSave_Click);
+            // 
+            // txtDepMappingAccessControlCode
+            // 
+            this.txtDepMappingAccessControlCode.Location = new System.Drawing.Point(649, 32);
+            this.txtDepMappingAccessControlCode.Name = "txtDepMappingAccessControlCode";
+            this.txtDepMappingAccessControlCode.Size = new System.Drawing.Size(153, 20);
+            this.txtDepMappingAccessControlCode.TabIndex = 3;
+            this.txtDepMappingAccessControlCode.TextChanged += new System.EventHandler(this.txtDepMappingAccessControlCode_TextChanged);
+            // 
+            // txtDepMappingTimeAndAttendanceCode
+            // 
+            this.txtDepMappingTimeAndAttendanceCode.Location = new System.Drawing.Point(649, 6);
+            this.txtDepMappingTimeAndAttendanceCode.Name = "txtDepMappingTimeAndAttendanceCode";
+            this.txtDepMappingTimeAndAttendanceCode.Size = new System.Drawing.Size(153, 20);
+            this.txtDepMappingTimeAndAttendanceCode.TabIndex = 2;
+            this.txtDepMappingTimeAndAttendanceCode.TextChanged += new System.EventHandler(this.txtDepMappingTimeAndAttendanceCode_TextChanged);
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(500, 35);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(146, 13);
+            this.label16.TabIndex = 1;
+            this.label16.Text = "Access Control Device Code:";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(471, 9);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(175, 13);
+            this.label15.TabIndex = 0;
+            this.label15.Text = "Time and Attendance device Code:";
             // 
             // tabPage2
             // 
@@ -680,6 +869,26 @@
             this.tabPage2.Text = "Department Selection";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnDeselctAll
+            // 
+            this.btnDeselctAll.Location = new System.Drawing.Point(233, 53);
+            this.btnDeselctAll.Name = "btnDeselctAll";
+            this.btnDeselctAll.Size = new System.Drawing.Size(204, 23);
+            this.btnDeselctAll.TabIndex = 5;
+            this.btnDeselctAll.Text = "Deselect All";
+            this.btnDeselctAll.UseVisualStyleBackColor = true;
+            this.btnDeselctAll.Click += new System.EventHandler(this.btnDeselctAll_Click);
+            // 
+            // btnSelectAll
+            // 
+            this.btnSelectAll.Location = new System.Drawing.Point(23, 53);
+            this.btnSelectAll.Name = "btnSelectAll";
+            this.btnSelectAll.Size = new System.Drawing.Size(204, 23);
+            this.btnSelectAll.TabIndex = 4;
+            this.btnSelectAll.Text = "Select All";
+            this.btnSelectAll.UseVisualStyleBackColor = true;
+            this.btnSelectAll.Click += new System.EventHandler(this.btnSelectAll_Click);
+            // 
             // btnRefreshDepartments
             // 
             this.btnRefreshDepartments.Location = new System.Drawing.Point(404, 14);
@@ -693,7 +902,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(20, 25);
+            this.label12.Location = new System.Drawing.Point(20, 37);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(280, 13);
             this.label12.TabIndex = 2;
@@ -709,6 +918,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.chkSyncAccessControlDevices);
             this.tabPage3.Controls.Add(this.chkSynEmployees);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
@@ -728,25 +938,16 @@
             this.chkSynEmployees.UseVisualStyleBackColor = true;
             this.chkSynEmployees.CheckedChanged += new System.EventHandler(this.chkSynEmployees_CheckedChanged);
             // 
-            // btnSelectAll
+            // chkSyncAccessControlDevices
             // 
-            this.btnSelectAll.Location = new System.Drawing.Point(23, 53);
-            this.btnSelectAll.Name = "btnSelectAll";
-            this.btnSelectAll.Size = new System.Drawing.Size(204, 23);
-            this.btnSelectAll.TabIndex = 4;
-            this.btnSelectAll.Text = "Select All";
-            this.btnSelectAll.UseVisualStyleBackColor = true;
-            this.btnSelectAll.Click += new System.EventHandler(this.btnSelectAll_Click);
-            // 
-            // btnDeselctAll
-            // 
-            this.btnDeselctAll.Location = new System.Drawing.Point(233, 53);
-            this.btnDeselctAll.Name = "btnDeselctAll";
-            this.btnDeselctAll.Size = new System.Drawing.Size(204, 23);
-            this.btnDeselctAll.TabIndex = 5;
-            this.btnDeselctAll.Text = "Deselect All";
-            this.btnDeselctAll.UseVisualStyleBackColor = true;
-            this.btnDeselctAll.Click += new System.EventHandler(this.btnDeselctAll_Click);
+            this.chkSyncAccessControlDevices.AutoSize = true;
+            this.chkSyncAccessControlDevices.Location = new System.Drawing.Point(19, 53);
+            this.chkSyncAccessControlDevices.Name = "chkSyncAccessControlDevices";
+            this.chkSyncAccessControlDevices.Size = new System.Drawing.Size(164, 17);
+            this.chkSyncAccessControlDevices.TabIndex = 1;
+            this.chkSyncAccessControlDevices.Text = "Sync Access Control devices";
+            this.chkSyncAccessControlDevices.UseVisualStyleBackColor = true;
+            this.chkSyncAccessControlDevices.CheckedChanged += new System.EventHandler(this.chkSyncAccessControlDevices_CheckedChanged);
             // 
             // Form1
             // 
@@ -778,6 +979,11 @@
             this.tabPage5.ResumeLayout(false);
             this.tabPage5.PerformLayout();
             this.tabPage1.ResumeLayout(false);
+            this.tabPage1.PerformLayout();
+            this.tabctrlMappings.ResumeLayout(false);
+            this.tabpgStandardMapping.ResumeLayout(false);
+            this.tabpgDepartmentMapping.ResumeLayout(false);
+            this.tabpgDepartmentMapping.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
@@ -852,6 +1058,23 @@
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button btnDeselctAll;
         private System.Windows.Forms.Button btnSelectAll;
+        private System.Windows.Forms.TabControl tabctrlMappings;
+        private System.Windows.Forms.TabPage tabpgStandardMapping;
+        private System.Windows.Forms.TabPage tabpgDepartmentMapping;
+        private System.Windows.Forms.RadioButton radUseDepartmentMapping;
+        private System.Windows.Forms.RadioButton radUseStandardMapping;
+        private System.Windows.Forms.Button btnDepMappingsDeselectAll;
+        private System.Windows.Forms.Button btnDepMappingsSelectAll;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TreeView treeDepMappings;
+        private System.Windows.Forms.Button btnDepFetchMappings;
+        private System.Windows.Forms.Button btnDepMappingsRefresh;
+        private System.Windows.Forms.Button btnDepMappingsSave;
+        private System.Windows.Forms.TextBox txtDepMappingAccessControlCode;
+        private System.Windows.Forms.TextBox txtDepMappingTimeAndAttendanceCode;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.CheckBox chkSyncAccessControlDevices;
     }
 }
 

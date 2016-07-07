@@ -6,9 +6,12 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Serialization;
 using TM_Impronet_Interface.Classes;
 using TM_Impronet_Interface.Properties;
 
@@ -22,6 +25,10 @@ namespace TM_Impronet_Interface
         public Form1()
         {
             InitializeComponent();
+
+            tabctrlMappings.Appearance = TabAppearance.FlatButtons; tabctrlMappings.ItemSize = new Size(0, 1); tabctrlMappings.SizeMode = TabSizeMode.Fixed;
+            treeDepMappings.CheckBoxes = true;
+
             txtOutputPath.Text = Settings.Default.SaveFile;
             txtFbDatabasePath.Text = Settings.Default.FirebirdDatabasePath;
             txtSqlConnectionString.Text = Settings.Default.SQLConnectionString;
@@ -31,6 +38,13 @@ namespace TM_Impronet_Interface
             chkEnableTimer.Checked = Settings.Default.TimerEnabled;
             txtInterval.Text = Settings.Default.Interval.ToString(CultureInfo.InvariantCulture);
             chkSynEmployees.Checked = Settings.Default.SyncEnabled;
+            txtDepMappingAccessControlCode.Text = Settings.Default.DepAccessControlCode;
+            txtDepMappingTimeAndAttendanceCode.Text = Settings.Default.DepTimeAndAttendanceCode;
+            chkSyncAccessControlDevices.Checked = Settings.Default.SyncAccessControl;
+            if (Settings.Default.MappingConfig == 0)
+                radUseStandardMapping.Checked = true;
+            else
+                radUseDepartmentMapping.Checked = true;
 
             if (Settings.Default.UseSql)
                 radSql.Checked = true;
@@ -143,7 +157,7 @@ namespace TM_Impronet_Interface
             //Check
             if (!CheckAllFieldsValid())
             {
-                MessageBox.Show("Database settings not valid.");
+                MessageBox.Show(@"Database settings not valid.");
                 return;
             }
 
@@ -243,6 +257,12 @@ namespace TM_Impronet_Interface
                 //Read Current Mappings
                 var full = Settings.Default.Mappings;
                 var singleMappings = full.Split(',');
+                List<DepartmentMapping> departmentMappings = new List<DepartmentMapping>();
+                if (Settings.Default.MappingConfig == 1)
+                {
+                    departmentMappings =
+                        DeSerializeObject<DepartmentMappings>("DepartmentMappings.mxl").DepartmentMappingses;
+                }
 
                 while (myReader.Read())
                 {
@@ -302,19 +322,46 @@ namespace TM_Impronet_Interface
 
 
                     //Compare mappings
-                    var sFound = radIXP400.Checked
-                        ? singleMappings.FirstOrDefault(i => i.Contains(myReader["TR_TERMSLA"].ToString()))
-                        : singleMappings.FirstOrDefault(i => i.Contains(myReader["TR_TERM_SLA"].ToString()));
-                    if (sFound == null)
+                    var departmentId = (int)myReader["DEPT_No"];
+                    string sFound;
+                    if (Settings.Default.MappingConfig == 0)
                     {
-                        unProcessed++;
-                        Application.DoEvents();
-                        continue;
+                        sFound = radIXP400.Checked
+                            ? singleMappings.FirstOrDefault(i => i.Contains(myReader["TR_TERMSLA"].ToString()))
+                            : singleMappings.FirstOrDefault(i => i.Contains(myReader["TR_TERM_SLA"].ToString()));
+                        if (sFound == null)
+                        {
+                            unProcessed++;
+                            Application.DoEvents();
+                            continue;
+                        }
+                        sFound = sFound.Split(';')[1];
                     }
+                    else
+                    {
+                        var departmentMapping = departmentMappings.FindAll(i => i.Department.Id == departmentId);
+                        if (departmentMapping.Count > 0)
+                        {
+                            var terminals = radIXP400.Checked
+                            ? departmentMapping[0].Terminals.FindAll(i => i.Id.Contains(myReader["TR_TERMSLA"].ToString()))
+                            : departmentMapping[0].Terminals.FindAll(i => i.Id.Contains(myReader["TR_TERM_SLA"].ToString()));
+                            sFound = terminals.Count > 0 ? Settings.Default.DepTimeAndAttendanceCode : Settings.Default.DepAccessControlCode;
+                        }
+                        else
+                        {
+                            sFound = Settings.Default.DepAccessControlCode;
+                        }
+                    }
+                    
                     if (sFound != "")
                     {
-                        var readerAddress = sFound.Split(';')[1];
-                        var line = $"{employeeNo} {date} {time} {direction} {readerAddress}{Environment.NewLine}";
+                        if (!Settings.Default.SyncAccessControl)
+                            if (sFound == Settings.Default.DepAccessControlCode)
+                            {
+                                Application.DoEvents();
+                                continue;
+                            }
+                        var line = $"{employeeNo} {date} {time} {direction} {sFound}{Environment.NewLine}";
                         using (var sw = new StreamWriter(txtOutputPath.Text, true))
                         {
                             sw.Write(line);
@@ -488,28 +535,64 @@ namespace TM_Impronet_Interface
             }
         }
 
-        private static IEnumerable<Employee> GetTmpEmployees(IDbConnection connection, IDbCommand command)
+        private IEnumerable<Terminal> GetImproTerminals(IDbConnection connection, IDbCommand command)
         {
             try
-            {                
+            {
                 command.Connection = connection;
                 connection.Open();
 
                 var transaction = connection.BeginTransaction();
                 command.Transaction = transaction;
 
-                command.CommandText = "SELECT a.EMP_NO, b.BUTTON_NUMBER " +
+                command.CommandText = radIXP400.Checked
+                    ? "SELECT TERM_SLA, TERM_NAME FROM TERMINAL"
+                    : "SELECT T_ADDR, T_NAME FROM TERMINAL";
+                var reader = command.ExecuteReader();
+
+                var terminals = new List<Terminal>();
+                while (reader.Read())
+                {
+
+                    var terminal = new Terminal
+                    {
+                        Id = radIXP400.Checked ? reader["TERM_SLA"].ToString() : reader["T_ADDR"].ToString(),
+                        Name = radIXP400.Checked ? reader["TERM_NAME"].ToString() : reader["T_NAME"].ToString()
+                    };
+                    terminals.Add(terminal);
+                }
+                return terminals;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+        }
+
+        private static IEnumerable<Employee> GetTmpEmployees(IDbConnection connection, IDbCommand command)
+        {
+            try
+            {
+                command.Connection = connection;
+                connection.Open();
+
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                command.CommandText = "SELECT a.EMP_NO, a.DEPARTMENT, b.BUTTON_NUMBER " +
                                       "FROM EMP a " +
-                                      "LEFT OUTER JOIN BUTTON b ON a.EMP_NO = b.BUTTON_HLDR";                                      
+                                      "LEFT OUTER JOIN BUTTON b ON a.EMP_NO = b.BUTTON_HLDR";
                 var reader = command.ExecuteReader();
 
                 var employees = new List<Employee>();
                 while (reader.Read())
                 {
                     var employee = new Employee
-                    {                        
+                    {
                         EmployeeeNo = reader["EMP_NO"].ToString(),
-                        CardNumber = reader["BUTTON_NUMBER"].ToString()
+                        CardNumber = reader["BUTTON_NUMBER"].ToString(),
+                        DepartmentNo = Convert.ToInt32(reader["DEPARTMENT"])
                     };
                     employees.Add(employee);
                 }
@@ -737,6 +820,46 @@ namespace TM_Impronet_Interface
             }
         }
 
+        private static void EditTmpEmployee(IDbConnection connection, IDbCommand command, Employee employee)
+        {
+            try
+            {
+                command.Connection = connection;
+                connection.Open();
+
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                command.CommandText = "UPDATE EMP " +
+                                      "SET ID_NUMBER = @IDNUMBER, NAME = @NAME, SURNAME = @SURNAME, DEPARTMENT = @DEPARTMENT, COMPANY = @COMPANY " +
+                                      "WHERE EMP_NO = @EMPNO";
+                ((FbCommand)command).Parameters.Add("@EMPNO", FbDbType.VarChar).Value = employee.EmployeeeNo.Length > 10
+                    ? employee.EmployeeeNo.Substring(0, 10)
+                    : employee.EmployeeeNo;
+                ((FbCommand)command).Parameters.Add("@IDNUMBER", FbDbType.VarChar).Value = employee.IdNumber.Length > 13
+                    ? employee.IdNumber.Substring(0, 13)
+                    : employee.IdNumber;
+                ((FbCommand)command).Parameters.Add("@NAME", FbDbType.VarChar).Value = employee.Name.Length > 30
+                    ? employee.Name.Substring(0, 30)
+                    : employee.Name;
+                ((FbCommand)command).Parameters.Add("@SURNAME", FbDbType.VarChar).Value = employee.LastName.Length > 30
+                    ? employee.LastName.Substring(0, 30)
+                    : employee.LastName;
+                ((FbCommand)command).Parameters.Add("@DEPARTMENT", FbDbType.VarChar).Value = employee.DepartmentNo;
+                ((FbCommand)command).Parameters.Add("@COMPANY", FbDbType.VarChar).Value = employee.Employer;
+
+                command.ExecuteNonQuery();
+                transaction.Commit();
+
+                connection.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+
+            }
+        }
+
         private void SyncEmployees()
         {
             if (!chkSynEmployees.Checked)
@@ -745,17 +868,17 @@ namespace TM_Impronet_Interface
             //Save and get departments
             SaveDepartments();
             var deptObj = Settings.Default.SelectedDepartments;
-            if (deptObj == null)            
+            if (deptObj == null)
                 return;
-            
+
             var departments = deptObj.Cast<string>().Aggregate("", (current, dept) => current + $"'{dept}',");
             departments = departments.TrimEnd(',');
 
             var improDepartments = GetDepartments(GetConnectionObject(), GetCommandObject(), departments);
-            if (improDepartments==null)
+            if (improDepartments == null)
                 return;
             var tmpDepartments = GetTmpDepartments(GetTmpConnectionObject(), new FbCommand());
-            if (tmpDepartments==null)
+            if (tmpDepartments == null)
                 return;
             var improCompanies = GetImproCompanies(GetConnectionObject(), GetCommandObject());
             var tmpCompanies = GetTmpCompanies(GetTmpConnectionObject(), new FbCommand());
@@ -770,18 +893,18 @@ namespace TM_Impronet_Interface
             //Determine if Departments already exist
             foreach (var dept in improDepartments.Where(dept => tmpDepartments.All(i => i.Id != dept.Id)))
             {
-                //Create new employee in TMP
-                CreateTmpDepartment(GetTmpConnectionObject(), new FbCommand(), new Department {Id = dept.Id, Name = dept.Name});
+                //Create new department in TMP
+                CreateTmpDepartment(GetTmpConnectionObject(), new FbCommand(), new Department { Id = dept.Id, Name = dept.Name });
             }
 
             var improEmployees = GetImproEmployees(GetConnectionObject(), GetCommandObject(), departments);
-            if (improEmployees== null)
+            if (improEmployees == null)
                 return;
             var tmpEmployees = GetTmpEmployees(GetTmpConnectionObject(), new FbCommand());
             if (tmpEmployees == null)
                 return;
 
-            
+
             //Determine if Employees already exist
             var enumerable = improEmployees as Employee[] ?? improEmployees.ToArray();
             foreach (var empl in enumerable.Where(empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo)))
@@ -793,8 +916,21 @@ namespace TM_Impronet_Interface
             //Determine if Employee card number already exist
             foreach (var empl in enumerable.Where(empl => tmpEmployees.All(i => i.CardNumber != empl.CardNumber)))
             {
-                //Create new employee in TMP
+                //Add TMP Card Number
                 CreateTmpCardNumber(GetTmpConnectionObject(), new FbCommand(), empl);
+            }
+
+            var employees = tmpEmployees as IList<Employee> ?? tmpEmployees.ToList();
+            foreach (var improEmployee in enumerable)
+            {
+                foreach (var tmpEmployee in employees)
+                {
+                    if (improEmployee.EmployeeeNo != tmpEmployee.EmployeeeNo) continue;
+                    if (improEmployee.DepartmentNo != tmpEmployee.DepartmentNo)
+                    {
+                        EditTmpEmployee(GetTmpConnectionObject(), new FbCommand(), improEmployee);
+                    }
+                }
             }
         }
 
@@ -830,47 +966,20 @@ namespace TM_Impronet_Interface
                 dsTerminalMapping.Tables[0].Columns.Add("TERM_NAME");
                 dsTerminalMapping.Tables[0].Columns.Add("MAPPING");
 
-                connection.Open();
-
-                var myTransaction = connection.BeginTransaction();
-
-                command.Connection = connection;
-                command.Transaction = myTransaction;
-
-                command.CommandText = radIXP400.Checked
-                    ? "SELECT TERM_SLA, TERM_NAME FROM TERMINAL"
-                    : "SELECT T_ADDR, T_NAME FROM TERMINAL";
-
-                var myReader = command.ExecuteReader();
-                while (myReader.Read())
+                var terminals = GetImproTerminals(connection, command);
+                foreach (var terminal in terminals)
                 {
-                    var sFound = radIXP400.Checked
-                        ? singleMappings.FirstOrDefault(i => i.Contains(myReader["TERM_SLA"].ToString()))
-                        : singleMappings.FirstOrDefault(i => i.Contains(myReader["T_ADDR"].ToString()));
+                    var sFound = singleMappings.FirstOrDefault(i => i.Contains(terminal.Name));
                     if (sFound == null)
                     {
-                        if (radIXP400.Checked)
-                        {
-                            dsTerminalMapping.Tables[0].Rows.Add(myReader["TERM_SLA"], myReader["TERM_NAME"], "");
-                        }
-                        else
-                        {
-                            dsTerminalMapping.Tables[0].Rows.Add(myReader["T_ADDR"], myReader["T_NAME"], "");
-                        }
+
+                        dsTerminalMapping.Tables[0].Rows.Add(terminal.Id, terminal.Name, "");
                         continue;
                     }
                     if (sFound != "")
                     {
-                        if (radIXP400.Checked)
-                        {
-                            dsTerminalMapping.Tables[0].Rows.Add(myReader["TERM_SLA"], myReader["TERM_NAME"],
-                                sFound.Split(';')[1]);
-                        }
-                        else
-                        {
-                            dsTerminalMapping.Tables[0].Rows.Add(myReader["T_ADDR"], myReader["T_NAME"],
-                                sFound.Split(';')[1]);
-                        }
+                        dsTerminalMapping.Tables[0].Rows.Add(terminal.Id, terminal.Name,
+                            sFound.Split(';')[1]);
                     }
 
                     Application.DoEvents();
@@ -1023,7 +1132,7 @@ namespace TM_Impronet_Interface
             {
                 tmrSeconds.Stop();
                 _bAutomated = true;
-                Process(GetLowestDT(DateTime.Now), GetHighestDT(DateTime.Now), GetConnectionObject(), GetCommandObject());
+                Process(GetLowestDT(DateTime.Now), GetHighestDt(DateTime.Now), GetConnectionObject(), GetCommandObject());
                 _seconds = Convert.ToInt32(txtInterval.Text);
                 _bAutomated = false;
                 tmrSeconds.Start();
@@ -1152,7 +1261,214 @@ namespace TM_Impronet_Interface
             chkDepartments.ClearSelected();
         }
 
-        private DateTime GetHighestDT(DateTime dateTimeCurrent)
+        private void radUseStandardMapping_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!radUseStandardMapping.Checked) return;
+            tabctrlMappings.SelectedTab = tabpgStandardMapping;
+            Settings.Default.MappingConfig = 0;
+            Settings.Default.Save();
+        }
+
+        private void radUseDepartmentMapping_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!radUseDepartmentMapping.Checked) return;
+            tabctrlMappings.SelectedTab = tabpgDepartmentMapping;
+            Settings.Default.MappingConfig = 1;
+            Settings.Default.Save();
+        }
+
+        private void txtDepMappingTimeAndAttendanceCode_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.DepTimeAndAttendanceCode = txtDepMappingTimeAndAttendanceCode.Text;
+            Settings.Default.Save();
+        }
+
+        private void txtDepMappingAccessControlCode_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.DepAccessControlCode = txtDepMappingAccessControlCode.Text;
+            Settings.Default.Save();
+        }
+
+        private void btnDepFetchMappings_Click(object sender, EventArgs e)
+        {
+            treeDepMappings.Nodes.Clear();
+            var departments = GetDepartments(GetConnectionObject(), GetCommandObject());
+            var terminals = GetImproTerminals(GetConnectionObject(), GetCommandObject());
+            var enumerable = terminals as Terminal[] ?? terminals.ToArray();
+            var mappings = new List<DepartmentMapping>();
+            if (File.Exists("DepartmentMappings.mxl"))
+                mappings = DeSerializeObject<DepartmentMappings>("DepartmentMappings.mxl").DepartmentMappingses;
+            foreach (var department in departments)
+            {
+                var node = treeDepMappings.Nodes.Add(department.Id.ToString(), department.Name);
+                node.Tag = department.Id;
+                var departmentMapping = mappings.FindAll(i => i.Department.Id == department.Id);
+                foreach (var terminal in enumerable)
+                {
+                    var node2 = node.Nodes.Add(terminal.Id, terminal.Name);
+                    node2.Tag = terminal.Id;
+                    if (departmentMapping.Count > 0)
+                    {
+                        if (departmentMapping[0].Terminals.FindAll(i => i.Id == terminal.Id).Count > 0)
+                            node2.Checked = true;
+                    }
+                }
+            }
+        }
+
+        private void btnDepMappingsSelectAll_Click(object sender, EventArgs e)
+        {
+            //TreeView - myTreeview;
+            treeDepMappings.BeginUpdate();
+            //Loop through all the nodes of tree
+            foreach (TreeNode node in treeDepMappings.Nodes)
+            {
+                //If node has child nodes
+                if (node.Nodes.Count <= 0) continue;
+
+                //Check all the child nodes.
+                node.Checked = true;
+                foreach (TreeNode childNode in node.Nodes)
+                {
+                    childNode.Checked = true;
+                }
+            }
+            treeDepMappings.EndUpdate();
+        }
+
+        private void btnDepMappingsDeselectAll_Click(object sender, EventArgs e)
+        {
+            //TreeView - myTreeview;
+            treeDepMappings.BeginUpdate();
+            //Loop through all the nodes of tree
+            foreach (TreeNode node in treeDepMappings.Nodes)
+            {
+                //If node has child nodes
+                if (node.Nodes.Count <= 0) continue;
+
+                //Check all the child nodes.
+                node.Checked = false;
+                foreach (TreeNode childNode in node.Nodes)
+                {
+                    childNode.Checked = false;
+                }
+            }
+            treeDepMappings.EndUpdate();
+        }
+
+        private void treeDepMappings_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            CheckTreeViewNode(e.Node, e.Node.Checked);
+        }
+
+        private static void CheckTreeViewNode(TreeNode node, bool isChecked)
+        {
+            foreach (TreeNode item in node.Nodes)
+            {
+                item.Checked = isChecked;
+
+                if (item.Nodes.Count > 0)
+                {
+                    CheckTreeViewNode(item, isChecked);
+                }
+            }
+        }
+
+        private void btnDepMappingsSave_Click(object sender, EventArgs e)
+        {
+            var mappings = new DepartmentMappings {DepartmentMappingses = new List<DepartmentMapping>()};
+            foreach (TreeNode node in treeDepMappings.Nodes)
+            {
+                //If node has child nodes
+                if (node.Nodes.Count <= 0) continue;
+
+                //Check all the child nodes.
+                var mapping = new DepartmentMapping
+                {
+                    Department = new Department {Id = Convert.ToInt32(node.Tag), Name = node.Text},
+                    Terminals = new List<Terminal>()
+                };
+                foreach (TreeNode childNode in node.Nodes)
+                {
+                    if (childNode.Checked)
+                        mapping.Terminals.Add(new Terminal {Id = childNode.Tag.ToString(), Name = childNode.Text});                    
+                }
+                if (mapping.Terminals.Count > 0)
+                    mappings.DepartmentMappingses.Add(mapping);
+                if (mappings.DepartmentMappingses.Count > 0)
+                {
+                    SerializeObject(mappings, "DepartmentMappings.mxl");
+                }
+            }
+            MessageBox.Show(@"Mappings saved!");
+        }
+
+        public void SerializeObject<T>(T serializableObject, string fileName)
+        {
+            if (serializableObject == null) { return; }
+
+            try
+            {
+                var xmlDocument = new XmlDocument();
+                var serializer = new XmlSerializer(serializableObject.GetType());
+                using (var stream = new MemoryStream())
+                {
+                    serializer.Serialize(stream, serializableObject);
+                    stream.Position = 0;
+                    xmlDocument.Load(stream);
+                    xmlDocument.Save(fileName);
+                    stream.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        public T DeSerializeObject<T>(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) { return default(T); }
+
+            var objectOut = default(T);
+
+            try
+            {
+                var xmlDocument = new XmlDocument();
+                if (!File.Exists(fileName))
+                    return objectOut;
+                xmlDocument.Load(fileName);
+                var xmlString = xmlDocument.OuterXml;
+
+                using (var read = new StringReader(xmlString))
+                {
+                    var outType = typeof(T);
+
+                    var serializer = new XmlSerializer(outType);
+                    using (XmlReader reader = new XmlTextReader(read))
+                    {
+                        objectOut = (T)serializer.Deserialize(reader);
+                        reader.Close();
+                    }
+
+                    read.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            return objectOut;
+        }
+
+        private void chkSyncAccessControlDevices_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.SyncAccessControl = chkSyncAccessControlDevices.Checked;
+            Settings.Default.Save();
+        }
+
+        private static DateTime GetHighestDt(DateTime dateTimeCurrent)
         {
             return new DateTime(
                 dateTimeCurrent.Year,

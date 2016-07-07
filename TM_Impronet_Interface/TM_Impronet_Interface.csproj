@@ -52,7 +52,10 @@
   <ItemGroup>
     <Compile Include="Classes\Company.cs" />
     <Compile Include="Classes\Department.cs" />
+    <Compile Include="Classes\DepartmentMapping.cs" />
+    <Compile Include="Classes\DepartmentMappings.cs" />
     <Compile Include="Classes\Employee.cs" />
+    <Compile Include="Classes\Terminal.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
