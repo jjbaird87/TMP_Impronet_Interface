@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using FirebirdSql.Data.FirebirdClient;
+﻿using FirebirdSql.Data.FirebirdClient;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -19,8 +18,9 @@ namespace TM_Impronet_Interface
 {
     public partial class Form1 : Form
     {
-        bool _bRunning, _bAutomated;
+        bool _bRunning, _bSyncRunning, _bAutomated;
         int _seconds = 30;
+        private int _syncSeconds = 30;
 
         public Form1()
         {
@@ -36,11 +36,13 @@ namespace TM_Impronet_Interface
             txtRunner.Text = Settings.Default.Runner;
             chkRunnerEnabled.Checked = Settings.Default.RunnerEnabled;
             chkEnableTimer.Checked = Settings.Default.TimerEnabled;
-            txtInterval.Text = Settings.Default.Interval.ToString(CultureInfo.InvariantCulture);
+            chkSyncTimerEnabled.Checked = Settings.Default.SyncTimerEnabled;
+            txtInterval.Text = Settings.Default.Interval.ToString();
             chkSynEmployees.Checked = Settings.Default.SyncEnabled;
             txtDepMappingAccessControlCode.Text = Settings.Default.DepAccessControlCode;
             txtDepMappingTimeAndAttendanceCode.Text = Settings.Default.DepTimeAndAttendanceCode;
             chkSyncAccessControlDevices.Checked = Settings.Default.SyncAccessControl;
+            txtSyncInterval.Text = Settings.Default.SyncInterval.ToString();
             if (Settings.Default.MappingConfig == 0)
                 radUseStandardMapping.Checked = true;
             else
@@ -55,6 +57,7 @@ namespace TM_Impronet_Interface
 
             if (!chkEnableTimer.Checked) return;
             _seconds = txtInterval.Text == "" ? 300 : Convert.ToInt32(txtInterval.Text);
+            _syncSeconds = txtSyncInterval.Text == "" ? 400 : Convert.ToInt32(txtSyncInterval.Text);
             tmrSeconds.Start();            
         }
 
@@ -161,9 +164,9 @@ namespace TM_Impronet_Interface
                 return;
             }
 
-            //Complete employee migration first
-            if (chkSynEmployees.Checked)
-                SyncEmployees();
+            ////Complete employee migration first
+            //if (chkSynEmployees.Checked)
+            //    SyncEmployees();
 
             var unProcessed = 0;
             _bRunning = true;
@@ -505,8 +508,9 @@ namespace TM_Impronet_Interface
                 var transaction = connection.BeginTransaction();
                 command.Transaction = transaction;                
 
-                command.CommandText = "SELECT * FROM MASTER a JOIN EMPLOYEE b ON a.MST_SQ = b.MST_SQ " +
-                                      "WHERE b.DEPT_No IN (" + departments + ")";
+                command.CommandText = "SELECT EMPLOYEE.MST_SQ, MASTER.MST_FirstName, MASTER.MST_LastName, EMPLOYEE.EMP_Employer, EMPLOYEE.DEPT_No, EMPLOYEE.EMP_EmployeeNo, MASTER.MST_ID, TAG.TAG_Suspend " +
+                                      "FROM TAG INNER JOIN EMPLOYEE ON TAG.MST_SQ = EMPLOYEE.MST_SQ INNER JOIN MASTER ON TAG.MST_SQ = MASTER.MST_SQ AND EMPLOYEE.MST_SQ = MASTER.MST_SQ " +
+                                      "WHERE EMPLOYEE.DEPT_No IN (" + departments + ")";
                 var reader = command.ExecuteReader();
 
                 var employees = new List<Employee>();
@@ -520,7 +524,8 @@ namespace TM_Impronet_Interface
                         Employer = reader["EMP_Employer"].ToString(),
                         DepartmentNo = Convert.ToInt32(reader["DEPT_No"]),
                         EmployeeeNo = reader["EMP_EmployeeNo"].ToString(),
-                        IdNumber = reader["MST_ID"].ToString()
+                        IdNumber = reader["MST_ID"].ToString(),
+                        Suspended = reader["TAG_Suspend"].ToString() != "0"
                     };
                     if (employee.EmployeeeNo.Length > 10)
                         employee.EmployeeeNo = employee.EmployeeeNo.Substring(0, 10);
@@ -580,7 +585,7 @@ namespace TM_Impronet_Interface
                 var transaction = connection.BeginTransaction();
                 command.Transaction = transaction;
 
-                command.CommandText = "SELECT a.EMP_NO, a.DEPARTMENT, b.BUTTON_NUMBER " +
+                command.CommandText = "SELECT a.EMP_NO, a.DEPARTMENT, a.DISCHARGED, b.BUTTON_NUMBER " +
                                       "FROM EMP a " +
                                       "LEFT OUTER JOIN BUTTON b ON a.EMP_NO = b.BUTTON_HLDR";
                 var reader = command.ExecuteReader();
@@ -592,7 +597,8 @@ namespace TM_Impronet_Interface
                     {
                         EmployeeeNo = reader["EMP_NO"].ToString(),
                         CardNumber = reader["BUTTON_NUMBER"].ToString(),
-                        DepartmentNo = Convert.ToInt32(reader["DEPARTMENT"])
+                        DepartmentNo = Convert.ToInt32(reader["DEPARTMENT"]),
+                        Suspended = reader["DISCHARGED"].ToString() == "Y"
                     };
                     employees.Add(employee);
                 }
@@ -831,7 +837,7 @@ namespace TM_Impronet_Interface
                 command.Transaction = transaction;
 
                 command.CommandText = "UPDATE EMP " +
-                                      "SET ID_NUMBER = @IDNUMBER, NAME = @NAME, SURNAME = @SURNAME, DEPARTMENT = @DEPARTMENT, COMPANY = @COMPANY " +
+                                      "SET ID_NUMBER = @IDNUMBER, NAME = @NAME, SURNAME = @SURNAME, DEPARTMENT = @DEPARTMENT, COMPANY = @COMPANY, DISCHARGED = @DISCHARGED " +
                                       "WHERE EMP_NO = @EMPNO";
                 ((FbCommand)command).Parameters.Add("@EMPNO", FbDbType.VarChar).Value = employee.EmployeeeNo.Length > 10
                     ? employee.EmployeeeNo.Substring(0, 10)
@@ -847,6 +853,9 @@ namespace TM_Impronet_Interface
                     : employee.LastName;
                 ((FbCommand)command).Parameters.Add("@DEPARTMENT", FbDbType.VarChar).Value = employee.DepartmentNo;
                 ((FbCommand)command).Parameters.Add("@COMPANY", FbDbType.VarChar).Value = employee.Employer;
+                ((FbCommand) command).Parameters.Add("@DISCHARGED", FbDbType.Char).Value = employee.Suspended
+                    ? 'Y'
+                    : 'N';
 
                 command.ExecuteNonQuery();
                 transaction.Commit();
@@ -862,75 +871,92 @@ namespace TM_Impronet_Interface
 
         private void SyncEmployees()
         {
-            if (!chkSynEmployees.Checked)
-                return;
-
-            //Save and get departments
-            SaveDepartments();
-            var deptObj = Settings.Default.SelectedDepartments;
-            if (deptObj == null)
-                return;
-
-            var departments = deptObj.Cast<string>().Aggregate("", (current, dept) => current + $"'{dept}',");
-            departments = departments.TrimEnd(',');
-
-            var improDepartments = GetDepartments(GetConnectionObject(), GetCommandObject(), departments);
-            if (improDepartments == null)
-                return;
-            var tmpDepartments = GetTmpDepartments(GetTmpConnectionObject(), new FbCommand());
-            if (tmpDepartments == null)
-                return;
-            var improCompanies = GetImproCompanies(GetConnectionObject(), GetCommandObject());
-            var tmpCompanies = GetTmpCompanies(GetTmpConnectionObject(), new FbCommand());
-
-            //Determine if Companies already exist
-            foreach (var comp in improCompanies.Where(comp => tmpCompanies.All(i => i.Code != comp.Code)))
+            try
             {
-                //Create new employee in TMP
-                CreateTmpCompany(GetTmpConnectionObject(), new FbCommand(), new Company { Code = comp.Code, Description = "DEFAULT" });
-            }
+                _bSyncRunning = true;
 
-            //Determine if Departments already exist
-            foreach (var dept in improDepartments.Where(dept => tmpDepartments.All(i => i.Id != dept.Id)))
-            {
-                //Create new department in TMP
-                CreateTmpDepartment(GetTmpConnectionObject(), new FbCommand(), new Department { Id = dept.Id, Name = dept.Name });
-            }
+                //Save and get departments
+                SaveDepartments();
+                var deptObj = Settings.Default.SelectedDepartments;
+                if (deptObj == null)
+                    return;
 
-            var improEmployees = GetImproEmployees(GetConnectionObject(), GetCommandObject(), departments);
-            if (improEmployees == null)
-                return;
-            var tmpEmployees = GetTmpEmployees(GetTmpConnectionObject(), new FbCommand());
-            if (tmpEmployees == null)
-                return;
+                var departments = deptObj.Cast<string>().Aggregate("", (current, dept) => current + $"'{dept}',");
+                departments = departments.TrimEnd(',');
 
+                var improDepartments = GetDepartments(GetConnectionObject(), GetCommandObject(), departments);
+                if (improDepartments == null)
+                    return;
+                var tmpDepartments = GetTmpDepartments(GetTmpConnectionObject(), new FbCommand());
+                if (tmpDepartments == null)
+                    return;
+                var improCompanies = GetImproCompanies(GetConnectionObject(), GetCommandObject());
+                var tmpCompanies = GetTmpCompanies(GetTmpConnectionObject(), new FbCommand());
 
-            //Determine if Employees already exist
-            var enumerable = improEmployees as Employee[] ?? improEmployees.ToArray();
-            foreach (var empl in enumerable.Where(empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo)))
-            {
-                //Create new employee in TMP
-                CreateTmpEmployee(GetTmpConnectionObject(), new FbCommand(), empl);
-            }
-
-            //Determine if Employee card number already exist
-            foreach (var empl in enumerable.Where(empl => tmpEmployees.All(i => i.CardNumber != empl.CardNumber)))
-            {
-                //Add TMP Card Number
-                CreateTmpCardNumber(GetTmpConnectionObject(), new FbCommand(), empl);
-            }
-
-            var employees = tmpEmployees as IList<Employee> ?? tmpEmployees.ToList();
-            foreach (var improEmployee in enumerable)
-            {
-                foreach (var tmpEmployee in employees)
+                //Determine if Companies already exist
+                foreach (var comp in improCompanies.Where(comp => tmpCompanies.All(i => i.Code != comp.Code)))
                 {
-                    if (improEmployee.EmployeeeNo != tmpEmployee.EmployeeeNo) continue;
-                    if (improEmployee.DepartmentNo != tmpEmployee.DepartmentNo)
+                    //Create new employee in TMP
+                    CreateTmpCompany(GetTmpConnectionObject(), new FbCommand(),
+                        new Company {Code = comp.Code, Description = "DEFAULT"});
+                    Application.DoEvents();
+                }
+
+                //Determine if Departments already exist
+                foreach (var dept in improDepartments.Where(dept => tmpDepartments.All(i => i.Id != dept.Id)))
+                {
+                    //Create new department in TMP
+                    CreateTmpDepartment(GetTmpConnectionObject(), new FbCommand(),
+                        new Department {Id = dept.Id, Name = dept.Name});
+                    Application.DoEvents();
+                }
+
+                var improEmployees = GetImproEmployees(GetConnectionObject(), GetCommandObject(), departments);
+                if (improEmployees == null)
+                    return;
+                var tmpEmployees = GetTmpEmployees(GetTmpConnectionObject(), new FbCommand());
+                if (tmpEmployees == null)
+                    return;
+
+
+                //Determine if Employees already exist
+                var enumerable = improEmployees as Employee[] ?? improEmployees.ToArray();
+                foreach (
+                    var empl in
+                        enumerable.Where(
+                            empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo && i.Suspended == false)))
+                {
+                    //Create new employee in TMP                
+                    CreateTmpEmployee(GetTmpConnectionObject(), new FbCommand(), empl);
+                    Application.DoEvents();
+                }
+
+                //Determine if Employee card number already exist
+                foreach (var empl in enumerable.Where(empl => tmpEmployees.All(i => i.CardNumber != empl.CardNumber)))
+                {
+                    //Add TMP Card Number
+                    CreateTmpCardNumber(GetTmpConnectionObject(), new FbCommand(), empl);
+                    Application.DoEvents();
+                }
+
+                var employees = tmpEmployees as IList<Employee> ?? tmpEmployees.ToList();
+                foreach (var improEmployee in enumerable)
+                {
+                    foreach (var tmpEmployee in employees)
                     {
-                        EditTmpEmployee(GetTmpConnectionObject(), new FbCommand(), improEmployee);
+                        if (improEmployee.EmployeeeNo != tmpEmployee.EmployeeeNo) continue;
+                        if (improEmployee.DepartmentNo != tmpEmployee.DepartmentNo ||
+                            improEmployee.Suspended != tmpEmployee.Suspended)
+                        {
+                            EditTmpEmployee(GetTmpConnectionObject(), new FbCommand(), improEmployee);
+                        }
+                        Application.DoEvents();
                     }
                 }
+            }
+            finally
+            {
+                _bSyncRunning = false;
             }
         }
 
@@ -1122,7 +1148,18 @@ namespace TM_Impronet_Interface
 
         private void tmrMain_Tick(object sender, EventArgs e)
         {
-
+            lblSyncCountDown.Text = $"{_syncSeconds} second(s)";
+            if (_syncSeconds == 0 && !_bSyncRunning)
+            {
+                tmrMain.Stop();
+                SyncEmployees();
+                _syncSeconds = Convert.ToInt32(txtSyncInterval.Text);
+                tmrMain.Start();
+            }
+            else if (_syncSeconds < 0)
+                _syncSeconds = Convert.ToInt32(txtSyncInterval.Text);
+            else
+                _syncSeconds--;
         }
 
         private void tmrSeconds_Tick(object sender, EventArgs e)
@@ -1466,6 +1503,45 @@ namespace TM_Impronet_Interface
         {
             Settings.Default.SyncAccessControl = chkSyncAccessControlDevices.Checked;
             Settings.Default.Save();
+        }
+
+        private void txtSyncInterval_TextChanged(object sender, EventArgs e)
+        {
+            if (txtSyncInterval.Text == "") return;
+            Settings.Default.SyncInterval = Convert.ToInt32(txtSyncInterval.Text);
+            Settings.Default.Save();
+        }
+
+        private void chkSyncTimerEnabled_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkSyncTimerEnabled.Checked)
+            {
+                _syncSeconds = Convert.ToInt32(txtSyncInterval.Text);
+                tmrMain.Start();
+            }
+            else
+                tmrMain.Stop();
+
+            Settings.Default.SyncTimerEnabled = chkSyncTimerEnabled.Checked;
+            Settings.Default.Save();
+        }
+
+        private void tabPage3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSync_Click(object sender, EventArgs e)
+        {
+            if (!_bSyncRunning)
+            {
+                SyncEmployees();
+                MessageBox.Show(@"Sync complete");
+            }
+            else
+            {
+                MessageBox.Show(@"Sync already running");
+            }
         }
 
         private static DateTime GetHighestDt(DateTime dateTimeCurrent)

@@ -213,5 +213,29 @@ namespace TM_Impronet_Interface.Properties {
                 this["SyncAccessControl"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("400")]
+        public int SyncInterval {
+            get {
+                return ((int)(this["SyncInterval"]));
+            }
+            set {
+                this["SyncInterval"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SyncTimerEnabled {
+            get {
+                return ((bool)(this["SyncTimerEnabled"]));
+            }
+            set {
+                this["SyncTimerEnabled"] = value;
+            }
+        }
     }
 }

@@ -107,8 +107,14 @@
             this.label12 = new System.Windows.Forms.Label();
             this.chkDepartments = new System.Windows.Forms.CheckedListBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.chkSynEmployees = new System.Windows.Forms.CheckBox();
             this.chkSyncAccessControlDevices = new System.Windows.Forms.CheckBox();
+            this.chkSynEmployees = new System.Windows.Forms.CheckBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.txtSyncInterval = new System.Windows.Forms.TextBox();
+            this.btnSync = new System.Windows.Forms.Button();
+            this.chkSyncTimerEnabled = new System.Windows.Forms.CheckBox();
+            this.label14 = new System.Windows.Forms.Label();
+            this.lblSyncCountDown = new System.Windows.Forms.Label();
             this.grpImportSettings.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -165,8 +171,6 @@
             this.grpImportSettings.Controls.Add(this.groupBox3);
             this.grpImportSettings.Controls.Add(this.radIXP220);
             this.grpImportSettings.Controls.Add(this.radIXP400);
-            this.grpImportSettings.Controls.Add(this.label8);
-            this.grpImportSettings.Controls.Add(this.txtInterval);
             this.grpImportSettings.Controls.Add(this.label6);
             this.grpImportSettings.Controls.Add(this.cmbDirection);
             this.grpImportSettings.Controls.Add(this.label5);
@@ -186,7 +190,7 @@
             // 
             this.groupBox3.Controls.Add(this.radEmployeeNum);
             this.groupBox3.Controls.Add(this.radMstsq);
-            this.groupBox3.Location = new System.Drawing.Point(16, 325);
+            this.groupBox3.Location = new System.Drawing.Point(16, 292);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(153, 110);
             this.groupBox3.TabIndex = 21;
@@ -218,7 +222,7 @@
             // radIXP220
             // 
             this.radIXP220.AutoSize = true;
-            this.radIXP220.Location = new System.Drawing.Point(16, 287);
+            this.radIXP220.Location = new System.Drawing.Point(16, 254);
             this.radIXP220.Name = "radIXP220";
             this.radIXP220.Size = new System.Drawing.Size(63, 17);
             this.radIXP220.TabIndex = 19;
@@ -229,7 +233,7 @@
             // 
             this.radIXP400.AutoSize = true;
             this.radIXP400.Checked = true;
-            this.radIXP400.Location = new System.Drawing.Point(16, 264);
+            this.radIXP400.Location = new System.Drawing.Point(16, 231);
             this.radIXP400.Name = "radIXP400";
             this.radIXP400.Size = new System.Drawing.Size(63, 17);
             this.radIXP400.TabIndex = 18;
@@ -240,15 +244,15 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(13, 210);
+            this.label8.Location = new System.Drawing.Point(6, 76);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(91, 13);
+            this.label8.Size = new System.Drawing.Size(124, 13);
             this.label8.TabIndex = 17;
-            this.label8.Text = "Interval (seconds)";
+            this.label8.Text = "Export Interval (seconds)";
             // 
             // txtInterval
             // 
-            this.txtInterval.Location = new System.Drawing.Point(16, 227);
+            this.txtInterval.Location = new System.Drawing.Point(9, 93);
             this.txtInterval.Name = "txtInterval";
             this.txtInterval.Size = new System.Drawing.Size(153, 20);
             this.txtInterval.TabIndex = 16;
@@ -435,7 +439,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(6, 92);
+            this.label9.Location = new System.Drawing.Point(6, 182);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(94, 20);
             this.label9.TabIndex = 15;
@@ -445,7 +449,7 @@
             // 
             this.lblCountdown.AutoSize = true;
             this.lblCountdown.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblCountdown.Location = new System.Drawing.Point(6, 124);
+            this.lblCountdown.Location = new System.Drawing.Point(6, 214);
             this.lblCountdown.Name = "lblCountdown";
             this.lblCountdown.Size = new System.Drawing.Size(194, 39);
             this.lblCountdown.TabIndex = 14;
@@ -502,7 +506,7 @@
             // 
             // tmrMain
             // 
-            this.tmrMain.Interval = 300000;
+            this.tmrMain.Interval = 1000;
             this.tmrMain.Tick += new System.EventHandler(this.tmrMain_Tick);
             // 
             // tmrSeconds
@@ -656,9 +660,16 @@
             // 
             // tabPage5
             // 
+            this.tabPage5.Controls.Add(this.label14);
+            this.tabPage5.Controls.Add(this.lblSyncCountDown);
+            this.tabPage5.Controls.Add(this.chkSyncTimerEnabled);
+            this.tabPage5.Controls.Add(this.label13);
+            this.tabPage5.Controls.Add(this.txtSyncInterval);
             this.tabPage5.Controls.Add(this.label9);
             this.tabPage5.Controls.Add(this.lblCountdown);
             this.tabPage5.Controls.Add(this.label7);
+            this.tabPage5.Controls.Add(this.label8);
+            this.tabPage5.Controls.Add(this.txtInterval);
             this.tabPage5.Controls.Add(this.txtRunner);
             this.tabPage5.Controls.Add(this.chkEnableTimer);
             this.tabPage5.Controls.Add(this.button1);
@@ -918,6 +929,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.btnSync);
             this.tabPage3.Controls.Add(this.chkSyncAccessControlDevices);
             this.tabPage3.Controls.Add(this.chkSynEmployees);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
@@ -926,6 +938,18 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Sync Options";
             this.tabPage3.UseVisualStyleBackColor = true;
+            this.tabPage3.Click += new System.EventHandler(this.tabPage3_Click);
+            // 
+            // chkSyncAccessControlDevices
+            // 
+            this.chkSyncAccessControlDevices.AutoSize = true;
+            this.chkSyncAccessControlDevices.Location = new System.Drawing.Point(19, 53);
+            this.chkSyncAccessControlDevices.Name = "chkSyncAccessControlDevices";
+            this.chkSyncAccessControlDevices.Size = new System.Drawing.Size(164, 17);
+            this.chkSyncAccessControlDevices.TabIndex = 1;
+            this.chkSyncAccessControlDevices.Text = "Sync Access Control devices";
+            this.chkSyncAccessControlDevices.UseVisualStyleBackColor = true;
+            this.chkSyncAccessControlDevices.CheckedChanged += new System.EventHandler(this.chkSyncAccessControlDevices_CheckedChanged);
             // 
             // chkSynEmployees
             // 
@@ -938,16 +962,64 @@
             this.chkSynEmployees.UseVisualStyleBackColor = true;
             this.chkSynEmployees.CheckedChanged += new System.EventHandler(this.chkSynEmployees_CheckedChanged);
             // 
-            // chkSyncAccessControlDevices
+            // label13
             // 
-            this.chkSyncAccessControlDevices.AutoSize = true;
-            this.chkSyncAccessControlDevices.Location = new System.Drawing.Point(19, 53);
-            this.chkSyncAccessControlDevices.Name = "chkSyncAccessControlDevices";
-            this.chkSyncAccessControlDevices.Size = new System.Drawing.Size(164, 17);
-            this.chkSyncAccessControlDevices.TabIndex = 1;
-            this.chkSyncAccessControlDevices.Text = "Sync Access Control devices";
-            this.chkSyncAccessControlDevices.UseVisualStyleBackColor = true;
-            this.chkSyncAccessControlDevices.CheckedChanged += new System.EventHandler(this.chkSyncAccessControlDevices_CheckedChanged);
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(7, 122);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(169, 13);
+            this.label13.TabIndex = 19;
+            this.label13.Text = "Synchronization Interval (seconds)";
+            // 
+            // txtSyncInterval
+            // 
+            this.txtSyncInterval.Location = new System.Drawing.Point(10, 139);
+            this.txtSyncInterval.Name = "txtSyncInterval";
+            this.txtSyncInterval.Size = new System.Drawing.Size(153, 20);
+            this.txtSyncInterval.TabIndex = 18;
+            this.txtSyncInterval.Text = "30";
+            this.txtSyncInterval.TextChanged += new System.EventHandler(this.txtSyncInterval_TextChanged);
+            // 
+            // btnSync
+            // 
+            this.btnSync.Location = new System.Drawing.Point(19, 89);
+            this.btnSync.Name = "btnSync";
+            this.btnSync.Size = new System.Drawing.Size(785, 23);
+            this.btnSync.TabIndex = 17;
+            this.btnSync.Text = "Synchronize now";
+            this.btnSync.UseVisualStyleBackColor = true;
+            this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
+            // 
+            // chkSyncTimerEnabled
+            // 
+            this.chkSyncTimerEnabled.AutoSize = true;
+            this.chkSyncTimerEnabled.Location = new System.Drawing.Point(240, 52);
+            this.chkSyncTimerEnabled.Name = "chkSyncTimerEnabled";
+            this.chkSyncTimerEnabled.Size = new System.Drawing.Size(127, 17);
+            this.chkSyncTimerEnabled.TabIndex = 20;
+            this.chkSyncTimerEnabled.Text = "Sync Timer Enabled?";
+            this.chkSyncTimerEnabled.UseVisualStyleBackColor = true;
+            this.chkSyncTimerEnabled.CheckedChanged += new System.EventHandler(this.chkSyncTimerEnabled_CheckedChanged);
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label14.Location = new System.Drawing.Point(254, 182);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(211, 20);
+            this.label14.TabIndex = 22;
+            this.label14.Text = "Synchronization Countdown:";
+            // 
+            // lblSyncCountDown
+            // 
+            this.lblSyncCountDown.AutoSize = true;
+            this.lblSyncCountDown.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSyncCountDown.Location = new System.Drawing.Point(254, 214);
+            this.lblSyncCountDown.Name = "lblSyncCountDown";
+            this.lblSyncCountDown.Size = new System.Drawing.Size(194, 39);
+            this.lblSyncCountDown.TabIndex = 21;
+            this.lblSyncCountDown.Text = "0 second(s)";
             // 
             // Form1
             // 
@@ -1075,6 +1147,12 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.CheckBox chkSyncAccessControlDevices;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox txtSyncInterval;
+        private System.Windows.Forms.Button btnSync;
+        private System.Windows.Forms.CheckBox chkSyncTimerEnabled;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label lblSyncCountDown;
     }
 }
 
