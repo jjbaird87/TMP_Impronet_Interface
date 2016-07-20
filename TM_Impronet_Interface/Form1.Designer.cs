@@ -39,13 +39,13 @@
             this.radMstsq = new System.Windows.Forms.RadioButton();
             this.radIXP220 = new System.Windows.Forms.RadioButton();
             this.radIXP400 = new System.Windows.Forms.RadioButton();
-            this.label8 = new System.Windows.Forms.Label();
-            this.txtInterval = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cmbDirection = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
             this.txtReaderAddress = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txtInterval = new System.Windows.Forms.TextBox();
             this.btnBrowseOutput = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.txtOutputPath = new System.Windows.Forms.TextBox();
@@ -69,7 +69,7 @@
             this.txtRunner = new System.Windows.Forms.TextBox();
             this.tmrMain = new System.Windows.Forms.Timer(this.components);
             this.tmrSeconds = new System.Windows.Forms.Timer(this.components);
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabEmail = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -83,6 +83,11 @@
             this.label10 = new System.Windows.Forms.Label();
             this.radSql = new System.Windows.Forms.RadioButton();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.label14 = new System.Windows.Forms.Label();
+            this.lblSyncCountDown = new System.Windows.Forms.Label();
+            this.chkSyncTimerEnabled = new System.Windows.Forms.CheckBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.txtSyncInterval = new System.Windows.Forms.TextBox();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.radUseDepartmentMapping = new System.Windows.Forms.RadioButton();
             this.radUseStandardMapping = new System.Windows.Forms.RadioButton();
@@ -107,19 +112,29 @@
             this.label12 = new System.Windows.Forms.Label();
             this.chkDepartments = new System.Windows.Forms.CheckedListBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.btnSync = new System.Windows.Forms.Button();
             this.chkSyncAccessControlDevices = new System.Windows.Forms.CheckBox();
             this.chkSynEmployees = new System.Windows.Forms.CheckBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.txtSyncInterval = new System.Windows.Forms.TextBox();
-            this.btnSync = new System.Windows.Forms.Button();
-            this.chkSyncTimerEnabled = new System.Windows.Forms.CheckBox();
-            this.label14 = new System.Windows.Forms.Label();
-            this.lblSyncCountDown = new System.Windows.Forms.Label();
+            this.tabPgEmail = new System.Windows.Forms.TabPage();
+            this.txtToEmailAddress = new System.Windows.Forms.TextBox();
+            this.label23 = new System.Windows.Forms.Label();
+            this.txtEmailAddress = new System.Windows.Forms.TextBox();
+            this.txtUsername = new System.Windows.Forms.TextBox();
+            this.txtSmtpPort = new System.Windows.Forms.TextBox();
+            this.txtPassword = new System.Windows.Forms.TextBox();
+            this.txtSmtpHost = new System.Windows.Forms.TextBox();
+            this.chkEnableEmail = new System.Windows.Forms.CheckBox();
+            this.chkSSL = new System.Windows.Forms.CheckBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
             this.grpImportSettings.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridMappings)).BeginInit();
-            this.tabControl1.SuspendLayout();
+            this.tabEmail.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -131,6 +146,7 @@
             this.tabpgDepartmentMapping.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            this.tabPgEmail.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -241,24 +257,6 @@
             this.radIXP400.Text = "IXP 400";
             this.radIXP400.UseVisualStyleBackColor = true;
             // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 76);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(124, 13);
-            this.label8.TabIndex = 17;
-            this.label8.Text = "Export Interval (seconds)";
-            // 
-            // txtInterval
-            // 
-            this.txtInterval.Location = new System.Drawing.Point(9, 93);
-            this.txtInterval.Name = "txtInterval";
-            this.txtInterval.Size = new System.Drawing.Size(153, 20);
-            this.txtInterval.TabIndex = 16;
-            this.txtInterval.Text = "30";
-            this.txtInterval.TextChanged += new System.EventHandler(this.txtInterval_TextChanged);
-            // 
             // label6
             // 
             this.label6.AutoSize = true;
@@ -308,6 +306,24 @@
             this.label2.Size = new System.Drawing.Size(49, 13);
             this.label2.TabIndex = 5;
             this.label2.Text = "To Date:";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 76);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(124, 13);
+            this.label8.TabIndex = 17;
+            this.label8.Text = "Export Interval (seconds)";
+            // 
+            // txtInterval
+            // 
+            this.txtInterval.Location = new System.Drawing.Point(9, 93);
+            this.txtInterval.Name = "txtInterval";
+            this.txtInterval.Size = new System.Drawing.Size(153, 20);
+            this.txtInterval.TabIndex = 16;
+            this.txtInterval.Text = "30";
+            this.txtInterval.TextChanged += new System.EventHandler(this.txtInterval_TextChanged);
             // 
             // btnBrowseOutput
             // 
@@ -514,18 +530,19 @@
             this.tmrSeconds.Interval = 1000;
             this.tmrSeconds.Tick += new System.EventHandler(this.tmrSeconds_Tick);
             // 
-            // tabControl1
+            // tabEmail
             // 
-            this.tabControl1.Controls.Add(this.tabPage4);
-            this.tabControl1.Controls.Add(this.tabPage5);
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Controls.Add(this.tabPage3);
-            this.tabControl1.Location = new System.Drawing.Point(212, 13);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(824, 450);
-            this.tabControl1.TabIndex = 21;
+            this.tabEmail.Controls.Add(this.tabPage4);
+            this.tabEmail.Controls.Add(this.tabPage5);
+            this.tabEmail.Controls.Add(this.tabPage1);
+            this.tabEmail.Controls.Add(this.tabPage2);
+            this.tabEmail.Controls.Add(this.tabPage3);
+            this.tabEmail.Controls.Add(this.tabPgEmail);
+            this.tabEmail.Location = new System.Drawing.Point(212, 13);
+            this.tabEmail.Name = "tabEmail";
+            this.tabEmail.SelectedIndex = 0;
+            this.tabEmail.Size = new System.Drawing.Size(824, 450);
+            this.tabEmail.TabIndex = 21;
             // 
             // tabPage4
             // 
@@ -681,6 +698,55 @@
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Runner Settings";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label14.Location = new System.Drawing.Point(254, 182);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(211, 20);
+            this.label14.TabIndex = 22;
+            this.label14.Text = "Synchronization Countdown:";
+            // 
+            // lblSyncCountDown
+            // 
+            this.lblSyncCountDown.AutoSize = true;
+            this.lblSyncCountDown.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSyncCountDown.Location = new System.Drawing.Point(254, 214);
+            this.lblSyncCountDown.Name = "lblSyncCountDown";
+            this.lblSyncCountDown.Size = new System.Drawing.Size(194, 39);
+            this.lblSyncCountDown.TabIndex = 21;
+            this.lblSyncCountDown.Text = "0 second(s)";
+            // 
+            // chkSyncTimerEnabled
+            // 
+            this.chkSyncTimerEnabled.AutoSize = true;
+            this.chkSyncTimerEnabled.Location = new System.Drawing.Point(240, 52);
+            this.chkSyncTimerEnabled.Name = "chkSyncTimerEnabled";
+            this.chkSyncTimerEnabled.Size = new System.Drawing.Size(127, 17);
+            this.chkSyncTimerEnabled.TabIndex = 20;
+            this.chkSyncTimerEnabled.Text = "Sync Timer Enabled?";
+            this.chkSyncTimerEnabled.UseVisualStyleBackColor = true;
+            this.chkSyncTimerEnabled.CheckedChanged += new System.EventHandler(this.chkSyncTimerEnabled_CheckedChanged);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(7, 122);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(169, 13);
+            this.label13.TabIndex = 19;
+            this.label13.Text = "Synchronization Interval (seconds)";
+            // 
+            // txtSyncInterval
+            // 
+            this.txtSyncInterval.Location = new System.Drawing.Point(10, 139);
+            this.txtSyncInterval.Name = "txtSyncInterval";
+            this.txtSyncInterval.Size = new System.Drawing.Size(153, 20);
+            this.txtSyncInterval.TabIndex = 18;
+            this.txtSyncInterval.Text = "30";
+            this.txtSyncInterval.TextChanged += new System.EventHandler(this.txtSyncInterval_TextChanged);
             // 
             // tabPage1
             // 
@@ -888,7 +954,7 @@
             this.btnDeselctAll.TabIndex = 5;
             this.btnDeselctAll.Text = "Deselect All";
             this.btnDeselctAll.UseVisualStyleBackColor = true;
-            this.btnDeselctAll.Click += new System.EventHandler(this.btnDeselctAll_Click);
+            this.btnDeselctAll.Click += new System.EventHandler(this.btnDeselectAll_Click);
             // 
             // btnSelectAll
             // 
@@ -940,6 +1006,16 @@
             this.tabPage3.UseVisualStyleBackColor = true;
             this.tabPage3.Click += new System.EventHandler(this.tabPage3_Click);
             // 
+            // btnSync
+            // 
+            this.btnSync.Location = new System.Drawing.Point(19, 89);
+            this.btnSync.Name = "btnSync";
+            this.btnSync.Size = new System.Drawing.Size(785, 23);
+            this.btnSync.TabIndex = 17;
+            this.btnSync.Text = "Synchronize now";
+            this.btnSync.UseVisualStyleBackColor = true;
+            this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
+            // 
             // chkSyncAccessControlDevices
             // 
             this.chkSyncAccessControlDevices.AutoSize = true;
@@ -962,71 +1038,163 @@
             this.chkSynEmployees.UseVisualStyleBackColor = true;
             this.chkSynEmployees.CheckedChanged += new System.EventHandler(this.chkSynEmployees_CheckedChanged);
             // 
-            // label13
+            // tabPgEmail
             // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(7, 122);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(169, 13);
-            this.label13.TabIndex = 19;
-            this.label13.Text = "Synchronization Interval (seconds)";
+            this.tabPgEmail.Controls.Add(this.txtToEmailAddress);
+            this.tabPgEmail.Controls.Add(this.label23);
+            this.tabPgEmail.Controls.Add(this.txtEmailAddress);
+            this.tabPgEmail.Controls.Add(this.txtUsername);
+            this.tabPgEmail.Controls.Add(this.txtSmtpPort);
+            this.tabPgEmail.Controls.Add(this.txtPassword);
+            this.tabPgEmail.Controls.Add(this.txtSmtpHost);
+            this.tabPgEmail.Controls.Add(this.chkEnableEmail);
+            this.tabPgEmail.Controls.Add(this.chkSSL);
+            this.tabPgEmail.Controls.Add(this.label22);
+            this.tabPgEmail.Controls.Add(this.label21);
+            this.tabPgEmail.Controls.Add(this.label20);
+            this.tabPgEmail.Controls.Add(this.label19);
+            this.tabPgEmail.Controls.Add(this.label18);
+            this.tabPgEmail.Location = new System.Drawing.Point(4, 22);
+            this.tabPgEmail.Name = "tabPgEmail";
+            this.tabPgEmail.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPgEmail.Size = new System.Drawing.Size(816, 424);
+            this.tabPgEmail.TabIndex = 5;
+            this.tabPgEmail.Text = "Email Options";
+            this.tabPgEmail.UseVisualStyleBackColor = true;
             // 
-            // txtSyncInterval
+            // txtToEmailAddress
             // 
-            this.txtSyncInterval.Location = new System.Drawing.Point(10, 139);
-            this.txtSyncInterval.Name = "txtSyncInterval";
-            this.txtSyncInterval.Size = new System.Drawing.Size(153, 20);
-            this.txtSyncInterval.TabIndex = 18;
-            this.txtSyncInterval.Text = "30";
-            this.txtSyncInterval.TextChanged += new System.EventHandler(this.txtSyncInterval_TextChanged);
+            this.txtToEmailAddress.Location = new System.Drawing.Point(548, 105);
+            this.txtToEmailAddress.Name = "txtToEmailAddress";
+            this.txtToEmailAddress.Size = new System.Drawing.Size(247, 20);
+            this.txtToEmailAddress.TabIndex = 13;
+            this.txtToEmailAddress.TextChanged += new System.EventHandler(this.txtToEmailAddress_TextChanged);
             // 
-            // btnSync
+            // label23
             // 
-            this.btnSync.Location = new System.Drawing.Point(19, 89);
-            this.btnSync.Name = "btnSync";
-            this.btnSync.Size = new System.Drawing.Size(785, 23);
-            this.btnSync.TabIndex = 17;
-            this.btnSync.Text = "Synchronize now";
-            this.btnSync.UseVisualStyleBackColor = true;
-            this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(415, 108);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(92, 13);
+            this.label23.TabIndex = 12;
+            this.label23.Text = "To Email Address:";
             // 
-            // chkSyncTimerEnabled
+            // txtEmailAddress
             // 
-            this.chkSyncTimerEnabled.AutoSize = true;
-            this.chkSyncTimerEnabled.Location = new System.Drawing.Point(240, 52);
-            this.chkSyncTimerEnabled.Name = "chkSyncTimerEnabled";
-            this.chkSyncTimerEnabled.Size = new System.Drawing.Size(127, 17);
-            this.chkSyncTimerEnabled.TabIndex = 20;
-            this.chkSyncTimerEnabled.Text = "Sync Timer Enabled?";
-            this.chkSyncTimerEnabled.UseVisualStyleBackColor = true;
-            this.chkSyncTimerEnabled.CheckedChanged += new System.EventHandler(this.chkSyncTimerEnabled_CheckedChanged);
+            this.txtEmailAddress.Location = new System.Drawing.Point(151, 105);
+            this.txtEmailAddress.Name = "txtEmailAddress";
+            this.txtEmailAddress.Size = new System.Drawing.Size(247, 20);
+            this.txtEmailAddress.TabIndex = 11;
+            this.txtEmailAddress.TextChanged += new System.EventHandler(this.txtEmailAddress_TextChanged);
             // 
-            // label14
+            // txtUsername
             // 
-            this.label14.AutoSize = true;
-            this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(254, 182);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(211, 20);
-            this.label14.TabIndex = 22;
-            this.label14.Text = "Synchronization Countdown:";
+            this.txtUsername.Location = new System.Drawing.Point(151, 131);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(247, 20);
+            this.txtUsername.TabIndex = 10;
+            this.txtUsername.TextChanged += new System.EventHandler(this.txtUsername_TextChanged);
             // 
-            // lblSyncCountDown
+            // txtSmtpPort
             // 
-            this.lblSyncCountDown.AutoSize = true;
-            this.lblSyncCountDown.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSyncCountDown.Location = new System.Drawing.Point(254, 214);
-            this.lblSyncCountDown.Name = "lblSyncCountDown";
-            this.lblSyncCountDown.Size = new System.Drawing.Size(194, 39);
-            this.lblSyncCountDown.TabIndex = 21;
-            this.lblSyncCountDown.Text = "0 second(s)";
+            this.txtSmtpPort.Location = new System.Drawing.Point(151, 76);
+            this.txtSmtpPort.Name = "txtSmtpPort";
+            this.txtSmtpPort.Size = new System.Drawing.Size(247, 20);
+            this.txtSmtpPort.TabIndex = 9;
+            this.txtSmtpPort.Text = "0";
+            this.txtSmtpPort.TextChanged += new System.EventHandler(this.txtSmtpPort_TextChanged);
+            // 
+            // txtPassword
+            // 
+            this.txtPassword.Location = new System.Drawing.Point(151, 159);
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.PasswordChar = '*';
+            this.txtPassword.Size = new System.Drawing.Size(247, 20);
+            this.txtPassword.TabIndex = 8;
+            this.txtPassword.TextChanged += new System.EventHandler(this.txtPassword_TextChanged);
+            // 
+            // txtSmtpHost
+            // 
+            this.txtSmtpHost.Location = new System.Drawing.Point(151, 50);
+            this.txtSmtpHost.Name = "txtSmtpHost";
+            this.txtSmtpHost.Size = new System.Drawing.Size(247, 20);
+            this.txtSmtpHost.TabIndex = 7;
+            this.txtSmtpHost.TextChanged += new System.EventHandler(this.txtSmtpHost_TextChanged);
+            // 
+            // chkEnableEmail
+            // 
+            this.chkEnableEmail.AutoSize = true;
+            this.chkEnableEmail.Location = new System.Drawing.Point(21, 15);
+            this.chkEnableEmail.Name = "chkEnableEmail";
+            this.chkEnableEmail.Size = new System.Drawing.Size(409, 17);
+            this.chkEnableEmail.TabIndex = 6;
+            this.chkEnableEmail.Text = "Enable E-mail (E-mail will sent when new users are created in the Impro database)" +
+    "";
+            this.chkEnableEmail.UseVisualStyleBackColor = true;
+            this.chkEnableEmail.CheckedChanged += new System.EventHandler(this.chkEnableEmail_CheckedChanged);
+            // 
+            // chkSSL
+            // 
+            this.chkSSL.AutoSize = true;
+            this.chkSSL.Location = new System.Drawing.Point(21, 189);
+            this.chkSSL.Name = "chkSSL";
+            this.chkSSL.Size = new System.Drawing.Size(71, 17);
+            this.chkSSL.TabIndex = 5;
+            this.chkSSL.Text = "TLS/SSL";
+            this.chkSSL.UseVisualStyleBackColor = true;
+            this.chkSSL.CheckedChanged += new System.EventHandler(this.chkSSL_CheckedChanged);
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(18, 108);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(106, 13);
+            this.label22.TabIndex = 4;
+            this.label22.Text = "From E-Mail Address:";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(18, 134);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(58, 13);
+            this.label21.TabIndex = 3;
+            this.label21.Text = "Username:";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(18, 162);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(56, 13);
+            this.label20.TabIndex = 2;
+            this.label20.Text = "Password:";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(18, 79);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(62, 13);
+            this.label19.TabIndex = 1;
+            this.label19.Text = "SMTP Port:";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(18, 53);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(65, 13);
+            this.label18.TabIndex = 0;
+            this.label18.Text = "SMTP Host:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1048, 538);
-            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this.tabEmail);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.grpImportSettings);
@@ -1040,7 +1208,7 @@
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridMappings)).EndInit();
-            this.tabControl1.ResumeLayout(false);
+            this.tabEmail.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
@@ -1060,6 +1228,8 @@
             this.tabPage2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
+            this.tabPgEmail.ResumeLayout(false);
+            this.tabPgEmail.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1107,7 +1277,7 @@
         private System.Windows.Forms.RadioButton radMstsq;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label lblCountdown;
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabControl tabEmail;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage3;
@@ -1153,6 +1323,21 @@
         private System.Windows.Forms.CheckBox chkSyncTimerEnabled;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label lblSyncCountDown;
+        private System.Windows.Forms.TabPage tabPgEmail;
+        private System.Windows.Forms.TextBox txtEmailAddress;
+        private System.Windows.Forms.TextBox txtUsername;
+        private System.Windows.Forms.TextBox txtSmtpPort;
+        private System.Windows.Forms.TextBox txtPassword;
+        private System.Windows.Forms.TextBox txtSmtpHost;
+        private System.Windows.Forms.CheckBox chkEnableEmail;
+        private System.Windows.Forms.CheckBox chkSSL;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.TextBox txtToEmailAddress;
+        private System.Windows.Forms.Label label23;
     }
 }
 

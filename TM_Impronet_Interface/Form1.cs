@@ -8,6 +8,8 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
@@ -19,8 +21,8 @@ namespace TM_Impronet_Interface
     public partial class Form1 : Form
     {
         bool _bRunning, _bSyncRunning, _bAutomated;
-        int _seconds = 30;
-        private int _syncSeconds = 30;
+        int _seconds = -1;
+        private int _syncSeconds = -1;
 
         public Form1()
         {
@@ -43,6 +45,15 @@ namespace TM_Impronet_Interface
             txtDepMappingTimeAndAttendanceCode.Text = Settings.Default.DepTimeAndAttendanceCode;
             chkSyncAccessControlDevices.Checked = Settings.Default.SyncAccessControl;
             txtSyncInterval.Text = Settings.Default.SyncInterval.ToString();
+            chkEnableEmail.Checked = Settings.Default.EnableEmail;
+            txtSmtpHost.Text = Settings.Default.SmtpHost;
+            txtUsername.Text = Settings.Default.Username;
+            txtEmailAddress.Text = Settings.Default.EmailAddress;
+            txtSmtpPort.Text = Settings.Default.SmtpPort.ToString();
+            txtPassword.Text = Settings.Default.Password;
+            chkSSL.Checked = Settings.Default.SSL;
+            txtToEmailAddress.Text = Settings.Default.ToEmailAddress;
+
             if (Settings.Default.MappingConfig == 0)
                 radUseStandardMapping.Checked = true;
             else
@@ -55,10 +66,30 @@ namespace TM_Impronet_Interface
                 radFirebird.Checked = true;
             }
 
-            if (!chkEnableTimer.Checked) return;
-            _seconds = txtInterval.Text == "" ? 300 : Convert.ToInt32(txtInterval.Text);
-            _syncSeconds = txtSyncInterval.Text == "" ? 400 : Convert.ToInt32(txtSyncInterval.Text);
-            tmrSeconds.Start();            
+            if (chkEnableTimer.Checked)
+            {
+                _seconds = txtInterval.Text == "" ? 300 : Convert.ToInt32(txtInterval.Text);
+                tmrSeconds.Start();
+            }
+
+            if (chkSyncTimerEnabled.Checked)
+            {
+                _syncSeconds = txtSyncInterval.Text == "" ? 400 : Convert.ToInt32(txtSyncInterval.Text);
+                tmrMain.Start();
+            }
+        }
+
+        private void Send_Email(string to, string subject, string html)
+        {
+            var mailMessage = new MailMessage(txtEmailAddress.Text, to) { Subject = subject, Body = html};
+
+            var mailSender = new SmtpClient(txtSmtpHost.Text, Convert.ToInt32(txtSmtpPort.Text))
+            {                
+                EnableSsl = chkSSL.Checked,
+                Credentials = new NetworkCredential(txtUsername.Text, txtPassword.Text)
+            };
+            //specify your login/password to log on to the SMTP server, if required
+            mailSender.Send(mailMessage);
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -207,10 +238,11 @@ namespace TM_Impronet_Interface
                     }                    
                 }
 
-                if (command is FbCommand)
+                var fbCommand = command as FbCommand;
+                if (fbCommand != null)
                 {
-                    ((FbCommand)command).Parameters.Add("@START_DATE", FbDbType.Integer).Value = startDate.ToString("yyyMMdd");
-                    ((FbCommand)command).Parameters.Add("@END_DATE", FbDbType.Integer).Value = endDate.ToString("yyyMMdd");
+                    fbCommand.Parameters.Add("@START_DATE", FbDbType.Integer).Value = startDate.ToString("yyyMMdd");
+                    fbCommand.Parameters.Add("@END_DATE", FbDbType.Integer).Value = endDate.ToString("yyyMMdd");
                 }
                 else if (command is SqlCommand)
                 {
@@ -477,7 +509,7 @@ namespace TM_Impronet_Interface
                 var transaction = connection.BeginTransaction();
                 command.Transaction = transaction;
 
-                command.CommandText = $"SELECT DISTINCT EMP_Employer FROM EMPLOYEE WHERE EMP_Employer <> ''";
+                command.CommandText = "SELECT DISTINCT EMP_Employer FROM EMPLOYEE WHERE EMP_Employer <> \'\'";
                 var reader = command.ExecuteReader();
 
                 var companies = new List<Company>();
@@ -508,9 +540,9 @@ namespace TM_Impronet_Interface
                 var transaction = connection.BeginTransaction();
                 command.Transaction = transaction;                
 
-                command.CommandText = "SELECT EMPLOYEE.MST_SQ, MASTER.MST_FirstName, MASTER.MST_LastName, EMPLOYEE.EMP_Employer, EMPLOYEE.DEPT_No, EMPLOYEE.EMP_EmployeeNo, MASTER.MST_ID, TAG.TAG_Suspend " +
+                command.CommandText = "SELECT DISTINCT EMPLOYEE.MST_SQ, MASTER.MST_FirstName, MASTER.MST_LastName, EMPLOYEE.EMP_Employer, EMPLOYEE.DEPT_No, EMPLOYEE.EMP_EmployeeNo, MASTER.MST_ID " +
                                       "FROM TAG INNER JOIN EMPLOYEE ON TAG.MST_SQ = EMPLOYEE.MST_SQ INNER JOIN MASTER ON TAG.MST_SQ = MASTER.MST_SQ AND EMPLOYEE.MST_SQ = MASTER.MST_SQ " +
-                                      "WHERE EMPLOYEE.DEPT_No IN (" + departments + ")";
+                                      "WHERE EMPLOYEE.DEPT_No IN (" + departments + ") AND TAG.Tag_Suspend = 0";
                 var reader = command.ExecuteReader();
 
                 var employees = new List<Employee>();
@@ -524,8 +556,8 @@ namespace TM_Impronet_Interface
                         Employer = reader["EMP_Employer"].ToString(),
                         DepartmentNo = Convert.ToInt32(reader["DEPT_No"]),
                         EmployeeeNo = reader["EMP_EmployeeNo"].ToString(),
-                        IdNumber = reader["MST_ID"].ToString(),
-                        Suspended = reader["TAG_Suspend"].ToString() != "0"
+                        IdNumber = reader["MST_ID"].ToString()//,
+                        //Suspended = reader["TAG_Suspend"].ToString() != "0"
                     };
                     if (employee.EmployeeeNo.Length > 10)
                         employee.EmployeeeNo = employee.EmployeeeNo.Substring(0, 10);
@@ -873,6 +905,7 @@ namespace TM_Impronet_Interface
         {
             try
             {
+                var newEmployees = new List<string>();
                 _bSyncRunning = true;
 
                 //Save and get departments
@@ -918,16 +951,18 @@ namespace TM_Impronet_Interface
                 if (tmpEmployees == null)
                     return;
 
-
                 //Determine if Employees already exist
                 var enumerable = improEmployees as Employee[] ?? improEmployees.ToArray();
                 foreach (
                     var empl in
                         enumerable.Where(
-                            empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo && i.Suspended == false)))
+                            empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo)))
                 {
+                    //if (empl.Suspended)
+                    //    continue;
                     //Create new employee in TMP                
                     CreateTmpEmployee(GetTmpConnectionObject(), new FbCommand(), empl);
+                    newEmployees.Add($"Employee No: {empl.EmployeeeNo}, Name: {empl.Name}, Suname: {empl.LastName}");
                     Application.DoEvents();
                 }
 
@@ -952,6 +987,15 @@ namespace TM_Impronet_Interface
                         }
                         Application.DoEvents();
                     }
+                }
+
+                if (!chkEnableEmail.Checked) return;
+                {
+                    if (newEmployees.Count <= 0) return;
+                    var html = "New employees have been added to Time Manager Platinum:\n\n";
+                    html = newEmployees.Aggregate(html, (current, newEmployee) => current + (newEmployee + "\n"));
+                    html += "\nKind Regards\nThe TMP Team";
+                    Send_Email(txtToEmailAddress.Text, "New Employees Added to Time Manager Platinum", html);
                 }
             }
             finally
@@ -1293,7 +1337,7 @@ namespace TM_Impronet_Interface
             }
         }
 
-        private void btnDeselctAll_Click(object sender, EventArgs e)
+        private void btnDeselectAll_Click(object sender, EventArgs e)
         {
             chkDepartments.ClearSelected();
         }
@@ -1529,6 +1573,54 @@ namespace TM_Impronet_Interface
         private void tabPage3_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void txtSmtpHost_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.SmtpHost = txtSmtpHost.Text;
+            Settings.Default.Save();
+        }
+
+        private void txtSmtpPort_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.SmtpPort = Convert.ToInt16(txtSmtpPort.Text);
+            Settings.Default.Save();
+        }
+
+        private void txtEmailAddress_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.EmailAddress = txtEmailAddress.Text;
+            Settings.Default.Save();
+        }
+
+        private void txtUsername_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.Username = txtUsername.Text;
+            Settings.Default.Save();
+        }
+
+        private void txtPassword_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.Password = txtPassword.Text;
+            Settings.Default.Save();
+        }
+
+        private void chkSSL_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.SSL = chkSSL.Checked;
+            Settings.Default.Save();
+        }
+
+        private void chkEnableEmail_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.EnableEmail = chkEnableEmail.Checked;
+            Settings.Default.Save();
+        }
+
+        private void txtToEmailAddress_TextChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ToEmailAddress = txtToEmailAddress.Text;
+            Settings.Default.Save();
         }
 
         private void btnSync_Click(object sender, EventArgs e)
