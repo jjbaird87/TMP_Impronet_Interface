@@ -333,5 +333,29 @@ namespace TM_Impronet_Interface.Properties {
                 this["ToEmailAddress"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SyncAllDepartments {
+            get {
+                return ((bool)(this["SyncAllDepartments"]));
+            }
+            set {
+                this["SyncAllDepartments"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseMSTSQ {
+            get {
+                return ((bool)(this["UseMSTSQ"]));
+            }
+            set {
+                this["UseMSTSQ"] = value;
+            }
+        }
     }
 }

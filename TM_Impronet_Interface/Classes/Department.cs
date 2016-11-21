@@ -5,7 +5,7 @@ namespace TM_Impronet_Interface.Classes
     [Serializable]
     public class Department
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         public string SiteSla { get; set; }
 

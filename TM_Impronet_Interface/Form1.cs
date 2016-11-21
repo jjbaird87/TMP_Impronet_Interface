@@ -1,5 +1,4 @@
-﻿using FirebirdSql.Data.FirebirdClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
@@ -13,6 +12,7 @@ using System.Net.Mail;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
+using FirebirdSql.Data.FirebirdClient;
 using TM_Impronet_Interface.Classes;
 using TM_Impronet_Interface.Properties;
 
@@ -20,15 +20,17 @@ namespace TM_Impronet_Interface
 {
     public partial class Form1 : Form
     {
-        bool _bRunning, _bSyncRunning, _bAutomated;
-        int _seconds = -1;
+        private bool _bRunning, _bSyncRunning, _bAutomated;
+        private int _seconds = -1;
         private int _syncSeconds = -1;
 
         public Form1()
         {
             InitializeComponent();
 
-            tabctrlMappings.Appearance = TabAppearance.FlatButtons; tabctrlMappings.ItemSize = new Size(0, 1); tabctrlMappings.SizeMode = TabSizeMode.Fixed;
+            tabctrlMappings.Appearance = TabAppearance.FlatButtons;
+            tabctrlMappings.ItemSize = new Size(0, 1);
+            tabctrlMappings.SizeMode = TabSizeMode.Fixed;
             treeDepMappings.CheckBoxes = true;
 
             txtOutputPath.Text = Settings.Default.SaveFile;
@@ -53,6 +55,8 @@ namespace TM_Impronet_Interface
             txtPassword.Text = Settings.Default.Password;
             chkSSL.Checked = Settings.Default.SSL;
             txtToEmailAddress.Text = Settings.Default.ToEmailAddress;
+            chkAlwaysSync.Checked = Settings.Default.SyncAllDepartments;
+            chkSyncMstsq.Checked = Settings.Default.UseMSTSQ;
 
             if (Settings.Default.MappingConfig == 0)
                 radUseStandardMapping.Checked = true;
@@ -81,10 +85,10 @@ namespace TM_Impronet_Interface
 
         private void Send_Email(string to, string subject, string html)
         {
-            var mailMessage = new MailMessage(txtEmailAddress.Text, to) { Subject = subject, Body = html};
+            var mailMessage = new MailMessage(txtEmailAddress.Text, to) {Subject = subject, Body = html};
 
             var mailSender = new SmtpClient(txtSmtpHost.Text, Convert.ToInt32(txtSmtpPort.Text))
-            {                
+            {
                 EnableSsl = chkSSL.Checked,
                 Credentials = new NetworkCredential(txtUsername.Text, txtPassword.Text)
             };
@@ -118,7 +122,7 @@ namespace TM_Impronet_Interface
         }
 
         private DbConnection GetTmpConnectionObject()
-        {            
+        {
             var connectionString =
                 "User=SYSDBA;" +
                 "Password=masterkey;" +
@@ -139,7 +143,12 @@ namespace TM_Impronet_Interface
         {
             if (radSql.Checked)
                 return new SqlCommand();
-            return new FbCommand();               
+            return new FbCommand();
+        }
+
+        private DbCommand GetTmpCommandObject()
+        {
+            return new FbCommand();
         }
 
         private static void TestConnection(IDbConnection connection)
@@ -213,14 +222,14 @@ namespace TM_Impronet_Interface
 
                 connection.Open();
                 var transaction = connection.BeginTransaction();
-                command.Transaction = transaction; 
+                command.Transaction = transaction;
 
                 toolStripProgressBar1.Value = 0;
                 if (_bAutomated)
                 {
                     command.CommandText =
-                    "SELECT COUNT(*) FROM TRANSACK " +
-                    "WHERE TR_PROCESSED = 0 AND TR_MSTSQ <> 0";
+                        "SELECT COUNT(*) FROM TRANSACK " +
+                        "WHERE TR_PROCESSED = 0 AND TR_MSTSQ <> 0";
                 }
                 else
                 {
@@ -235,7 +244,7 @@ namespace TM_Impronet_Interface
                         command.CommandText =
                             "SELECT COUNT(*) FROM TRANSACK " +
                             $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERM_SLA LIKE '{txtReaderAddress.Text}%' AND TR_MSTSQ <> 0";
-                    }                    
+                    }
                 }
 
                 var fbCommand = command as FbCommand;
@@ -246,8 +255,9 @@ namespace TM_Impronet_Interface
                 }
                 else if (command is SqlCommand)
                 {
-                    ((SqlCommand)command).Parameters.Add("@START_DATE", SqlDbType.Int).Value = startDate.ToString("yyyMMdd");
-                    ((SqlCommand)command).Parameters.Add("@END_DATE", SqlDbType.Int).Value = endDate.ToString("yyyMMdd");
+                    ((SqlCommand) command).Parameters.Add("@START_DATE", SqlDbType.Int).Value =
+                        startDate.ToString("yyyMMdd");
+                    ((SqlCommand) command).Parameters.Add("@END_DATE", SqlDbType.Int).Value = endDate.ToString("yyyMMdd");
                 }
 
                 var iCount = command.ExecuteScalar();
@@ -257,20 +267,20 @@ namespace TM_Impronet_Interface
                 if (_bAutomated)
                 {
                     command.CommandText =
-                    "SELECT * FROM TRANSACK a JOIN EMPLOYEE b ON a.TR_MSTSQ = b.MST_SQ  " +
-                    "WHERE TR_PROCESSED = 0";
+                        "SELECT * FROM TRANSACK a JOIN EMPLOYEE b ON a.TR_MSTSQ = b.MST_SQ  " +
+                        "WHERE TR_PROCESSED = 0";
                 }
                 else if (cmbDirection.SelectedIndex != 0 && cmbDirection.SelectedIndex != 1)
                 {
                     if (radIXP400.Checked)
                     {
                         command.CommandText = "SELECT * FROM TRANSACK a JOIN EMPLOYEE b ON a.TR_MSTSQ = b.MST_SQ " +
-                                                $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERMSLA LIKE '{txtReaderAddress.Text}%'";
+                                              $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERMSLA LIKE '{txtReaderAddress.Text}%'";
                     }
                     else
                     {
                         command.CommandText = "SELECT * FROM TRANSACK a JOIN MASTER b ON a.TR_MSTSQ = b.MST_SQ " +
-                                                $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERM_SLA LIKE '{txtReaderAddress.Text}%'";
+                                              $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERM_SLA LIKE '{txtReaderAddress.Text}%'";
                     }
                 }
                 else
@@ -278,12 +288,12 @@ namespace TM_Impronet_Interface
                     if (radIXP400.Checked)
                     {
                         command.CommandText = "SELECT * FROM TRANSACK a JOIN EMPLOYEE b ON a.TR_MSTSQ = b.MST_SQ " +
-                                                $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERMSLA LIKE '{txtReaderAddress.Text}%' AND TR_DIRECTION LIKE {cmbDirection.SelectedIndex}";
+                                              $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERMSLA LIKE '{txtReaderAddress.Text}%' AND TR_DIRECTION LIKE {cmbDirection.SelectedIndex}";
                     }
                     else
                     {
                         command.CommandText = "SELECT * FROM TRANSACK a JOIN MASTER b ON a.TR_MSTSQ = b.MST_SQ " +
-                                                $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERM_SLA LIKE '{txtReaderAddress.Text}%' AND TR_DIRECTION LIKE {cmbDirection.SelectedIndex}";
+                                              $"WHERE TR_DATE >= @START_DATE AND TR_DATE <= @END_DATE AND TR_TERM_SLA LIKE '{txtReaderAddress.Text}%' AND TR_DIRECTION LIKE {cmbDirection.SelectedIndex}";
                     }
                 }
 
@@ -357,7 +367,7 @@ namespace TM_Impronet_Interface
 
 
                     //Compare mappings
-                    var departmentId = (int)myReader["DEPT_No"];
+                    var departmentId = myReader["DEPT_No"].ToString();
                     string sFound;
                     if (Settings.Default.MappingConfig == 0)
                     {
@@ -378,16 +388,20 @@ namespace TM_Impronet_Interface
                         if (departmentMapping.Count > 0)
                         {
                             var terminals = radIXP400.Checked
-                            ? departmentMapping[0].Terminals.FindAll(i => i.Id.Contains(myReader["TR_TERMSLA"].ToString()))
-                            : departmentMapping[0].Terminals.FindAll(i => i.Id.Contains(myReader["TR_TERM_SLA"].ToString()));
-                            sFound = terminals.Count > 0 ? Settings.Default.DepTimeAndAttendanceCode : Settings.Default.DepAccessControlCode;
+                                ? departmentMapping[0].Terminals.FindAll(
+                                    i => i.Id.Contains(myReader["TR_TERMSLA"].ToString()))
+                                : departmentMapping[0].Terminals.FindAll(
+                                    i => i.Id.Contains(myReader["TR_TERM_SLA"].ToString()));
+                            sFound = terminals.Count > 0
+                                ? Settings.Default.DepTimeAndAttendanceCode
+                                : Settings.Default.DepAccessControlCode;
                         }
                         else
                         {
                             sFound = Settings.Default.DepAccessControlCode;
                         }
                     }
-                    
+
                     if (sFound != "")
                     {
                         if (!Settings.Default.SyncAccessControl)
@@ -406,7 +420,6 @@ namespace TM_Impronet_Interface
                     Application.DoEvents();
                 }
 
-                connection.Close();
 
                 if (_bAutomated)
                 {
@@ -417,7 +430,6 @@ namespace TM_Impronet_Interface
                     $"{iCount} record(s) processed and {unProcessed} record(s) skipped due to no mappings";
 
                 command.Dispose();
-                connection.Close();
 
                 if (!_bAutomated)
                     MessageBox.Show(@"Operation completed successfully");
@@ -429,6 +441,11 @@ namespace TM_Impronet_Interface
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message + @" Row: " + iCounter);
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -451,7 +468,7 @@ namespace TM_Impronet_Interface
                 {
                     var department = new Department
                     {
-                        Id = Convert.ToInt32(reader["DEPT_No"]),
+                        Id = reader["DEPT_No"].ToString(),
                         Name = reader["DEPT_Name"].ToString(),
                         SiteSla = reader["SITE_SLA"].ToString()
                     };
@@ -463,9 +480,16 @@ namespace TM_Impronet_Interface
             {
                 MessageBox.Show(ex.Message);
                 return null;
-            }            
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
-        private static List<Department> GetDepartments(IDbConnection connection, IDbCommand command, string departmentList)
+
+        private static List<Department> GetDepartments(IDbConnection connection, IDbCommand command,
+            string departmentList)
         {
             try
             {
@@ -484,7 +508,7 @@ namespace TM_Impronet_Interface
                 {
                     var department = new Department
                     {
-                        Id = Convert.ToInt32(reader["DEPT_No"]),
+                        Id = reader["DEPT_No"].ToString(),
                         Name = reader["DEPT_Name"].ToString(),
                         SiteSla = reader["SITE_SLA"].ToString()
                     };
@@ -497,7 +521,13 @@ namespace TM_Impronet_Interface
                 MessageBox.Show(ex.Message);
                 return null;
             }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
+
         private static List<Company> GetImproCompanies(IDbConnection connection, IDbCommand command)
         {
             try
@@ -528,21 +558,28 @@ namespace TM_Impronet_Interface
                 MessageBox.Show(ex.Message);
                 return null;
             }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
 
-        private static IEnumerable<Employee> GetImproEmployees(IDbConnection connection, IDbCommand command, string departments)
+        private static IEnumerable<Employee> GetImproEmployees(IDbConnection connection, IDbCommand command,
+            string departments)
         {
             try
-            {                        
+            {
                 command.Connection = connection;
                 connection.Open();
 
                 var transaction = connection.BeginTransaction();
-                command.Transaction = transaction;                
+                command.Transaction = transaction;
 
-                command.CommandText = "SELECT DISTINCT EMPLOYEE.MST_SQ, MASTER.MST_FirstName, MASTER.MST_LastName, EMPLOYEE.EMP_Employer, EMPLOYEE.DEPT_No, EMPLOYEE.EMP_EmployeeNo, MASTER.MST_ID " +
-                                      "FROM TAG INNER JOIN EMPLOYEE ON TAG.MST_SQ = EMPLOYEE.MST_SQ INNER JOIN MASTER ON TAG.MST_SQ = MASTER.MST_SQ AND EMPLOYEE.MST_SQ = MASTER.MST_SQ " +
-                                      "WHERE EMPLOYEE.DEPT_No IN (" + departments + ") AND TAG.Tag_Suspend = 0";
+                command.CommandText =
+                    "SELECT DISTINCT EMPLOYEE.MST_SQ, MASTER.MST_FirstName, MASTER.MST_LastName, EMPLOYEE.EMP_Employer, EMPLOYEE.DEPT_No, EMPLOYEE.EMP_EmployeeNo, MASTER.MST_ID " +
+                    "FROM EMPLOYEE INNER JOIN MASTER ON EMPLOYEE.MST_SQ = MASTER.MST_SQ  " +
+                    "WHERE EMPLOYEE.DEPT_No IN (" + departments + ") AND MST_Current = '1' ";
                 var reader = command.ExecuteReader();
 
                 var employees = new List<Employee>();
@@ -554,9 +591,9 @@ namespace TM_Impronet_Interface
                         Name = reader["MST_FirstName"].ToString(),
                         LastName = reader["MST_LastName"].ToString(),
                         Employer = reader["EMP_Employer"].ToString(),
-                        DepartmentNo = Convert.ToInt32(reader["DEPT_No"]),
+                        DepartmentNo = reader["DEPT_No"].ToString(),
                         EmployeeeNo = reader["EMP_EmployeeNo"].ToString(),
-                        IdNumber = reader["MST_ID"].ToString()//,
+                        IdNumber = reader["MST_ID"].ToString() //,
                         //Suspended = reader["TAG_Suspend"].ToString() != "0"
                     };
                     if (employee.EmployeeeNo.Length > 10)
@@ -569,6 +606,11 @@ namespace TM_Impronet_Interface
             {
                 MessageBox.Show(ex.Message);
                 return null;
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -605,6 +647,11 @@ namespace TM_Impronet_Interface
                 MessageBox.Show(ex.Message);
                 return null;
             }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
 
         private static IEnumerable<Employee> GetTmpEmployees(IDbConnection connection, IDbCommand command)
@@ -629,7 +676,7 @@ namespace TM_Impronet_Interface
                     {
                         EmployeeeNo = reader["EMP_NO"].ToString(),
                         CardNumber = reader["BUTTON_NUMBER"].ToString(),
-                        DepartmentNo = Convert.ToInt32(reader["DEPARTMENT"]),
+                        DepartmentNo = reader["DEPARTMENT"].ToString(),
                         Suspended = reader["DISCHARGED"].ToString() == "Y"
                     };
                     employees.Add(employee);
@@ -640,6 +687,11 @@ namespace TM_Impronet_Interface
             {
                 MessageBox.Show(ex.Message);
                 return null;
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -661,7 +713,7 @@ namespace TM_Impronet_Interface
                 {
                     var department = new Department
                     {
-                        Id = Convert.ToInt32(reader["CODE"]),
+                        Id = reader["CODE"].ToString(),
                         Name = reader["DESCRIPTION"].ToString(),
                     };
                     departments.Add(department);
@@ -672,6 +724,11 @@ namespace TM_Impronet_Interface
             {
                 MessageBox.Show(ex.Message);
                 return null;
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -704,6 +761,102 @@ namespace TM_Impronet_Interface
                 MessageBox.Show(ex.Message);
                 return null;
             }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
+        }
+
+        private static IEnumerable<Roster> GetTmpRosters(IDbConnection connection, IDbCommand command)
+        {
+            try
+            {
+                command.Connection = connection;
+                connection.Open();
+
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                command.CommandText = "SELECT a.CODE, a.DESCRIPTION FROM ROSTERS a ";
+                var reader = command.ExecuteReader();
+
+                var rosters = new List<Roster>();
+                while (reader.Read())
+                {
+                    var roster = new Roster
+                    {
+                        Code = reader["CODE"].ToString(),
+                        Name = reader["DESCRIPTION"].ToString()
+                    };
+                    rosters.Add(roster);
+                }
+                return rosters;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
+        }
+
+        private static void GetTmpRosterDates(IDbConnection connection, IDbCommand command, ref Roster roster)
+        {
+            try
+            {
+                command.Connection = connection;
+                connection.Open();
+
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                command.CommandText =
+                    $"SELECT a.CODE, a.ROSTERDATE, a.SHIFTS, a.DEDUCTHOURS, a.DEDUCTNT, a.DEDUCTOT1, a.DEDUCTOT2, a.DEDUCTOT3, a.DEDUCTOT4, a.TARGETNT, a.TARGETOT1, a.TARGETOT2, a.TARGETOT3, a.TARGETOT4, a.BALANCINGDIRECTION, a.MAXOT0, a.MAXOT1, a.MAXOT2, a.MAXOT3, a.MAXOT4 FROM ROSTERDATES a WHERE a.CODE = '{roster.Code}'";
+                var reader = command.ExecuteReader();
+
+                roster.RosterDates = new List<RosterDate>();
+                while (reader.Read())
+                {
+                    var rosterDate = new RosterDate
+                    {
+                        Code = reader["CODE"].ToString(),
+                        StartDate = Convert.ToDateTime(reader["ROSTERDATE"].ToString()),
+                        Shifts = reader["SHIFTS"].ToString(),
+                        DeductHours = reader["DEDUCTHOURS"].ToString()[0],
+                        DeductNt = reader["DEDUCTNT"].ToString()[0],
+                        DeductOt1 = reader["DEDUCTOT1"].ToString()[0],
+                        DeductOt2 = reader["DEDUCTOT2"].ToString()[0],
+                        DeductOt3 = reader["DEDUCTOT3"].ToString()[0],
+                        DeductOt4 = reader["DEDUCTOT4"].ToString()[0],
+                        TargetNt = (int) reader["TARGETNT"],
+                        TargetOt1 = (int) reader["TARGETOT1"],
+                        TargetOt2 = (int) reader["TARGETOT2"],
+                        TargetOt3 = (int) reader["TARGETOT3"],
+                        TargetOt4 = (int) reader["TARGETOT4"],
+                        BalancingDirection = reader["BALANCINGDIRECTION"].ToString()[0],
+                        MaxOt0 = (int) reader["MAXOT0"],
+                        MaxOt1 = (int) reader["MAXOT1"],
+                        MaxOt2 = (int) reader["MAXOT2"],
+                        MaxOt3 = (int) reader["MAXOT3"],
+                        MaxOt4 = (int) reader["MAXOT4"]
+                    };
+                    roster.RosterDates.Add(rosterDate);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+                    connection.Dispose();
+            }
         }
 
         private static void CreateTmpDepartment(IDbConnection connection, IDbCommand command, Department department)
@@ -717,19 +870,23 @@ namespace TM_Impronet_Interface
                 command.Transaction = transaction;
 
                 command.CommandText = "INSERT INTO DEPARTMENTS (CODE, DESCRIPTION) VALUES (@CODE, @DESCRIPTION)";
-                ((FbCommand)command).Parameters.Add("@CODE", FbDbType.VarChar).Value = department.Id.ToString();
-                ((FbCommand) command).Parameters.Add("@DESCRIPTION", FbDbType.VarChar).Value = department.Name.Length > 20
+                ((FbCommand) command).Parameters.Add("@CODE", FbDbType.VarChar).Value = department.Id;
+                ((FbCommand) command).Parameters.Add("@DESCRIPTION", FbDbType.VarChar).Value = department.Name.Length >
+                                                                                               20
                     ? department.Name.Substring(0, 20)
                     : department.Name;
-                command.ExecuteNonQuery();                              
+                command.ExecuteNonQuery();
                 transaction.Commit();
-
-                connection.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                
+
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -744,17 +901,20 @@ namespace TM_Impronet_Interface
                 command.Transaction = transaction;
 
                 command.CommandText = "INSERT INTO COMPANIES (CODE, DESCRIPTION) VALUES (@CODE, @DESCRIPTION)";
-                ((FbCommand)command).Parameters.Add("@CODE", FbDbType.VarChar).Value = company.Code;
+                ((FbCommand) command).Parameters.Add("@CODE", FbDbType.VarChar).Value = company.Code;
                 ((FbCommand) command).Parameters.Add("@DESCRIPTION", FbDbType.VarChar).Value = company.Description;
                 command.ExecuteNonQuery();
                 transaction.Commit();
-
-                connection.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
 
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -791,35 +951,40 @@ namespace TM_Impronet_Interface
                                       "@ABSENTTO, '01', '', @DEPARTMENT, @COMPANY, 0.000000, 0.000000, " +
                                       "0.000000, 0.000000, 0.000000, '', 'F', '-1,-1,-1,-1,-1,-1,', " +
                                       "'F', 'Y')";
-                ((FbCommand) command).Parameters.Add("@EMPNO", FbDbType.VarChar).Value = employee.EmployeeeNo.Length > 10
+                ((FbCommand) command).Parameters.Add("@EMPNO", FbDbType.VarChar).Value = employee.EmployeeeNo.Length >
+                                                                                         10
                     ? employee.EmployeeeNo.Substring(0, 10)
                     : employee.EmployeeeNo;
-                ((FbCommand)command).Parameters.Add("@IDNUMBER", FbDbType.VarChar).Value = employee.IdNumber.Length > 13
+                ((FbCommand) command).Parameters.Add("@IDNUMBER", FbDbType.VarChar).Value = employee.IdNumber.Length >
+                                                                                            13
                     ? employee.IdNumber.Substring(0, 13)
                     : employee.IdNumber;
-                ((FbCommand)command).Parameters.Add("@NAME", FbDbType.VarChar).Value = employee.Name.Length > 30
-                    ? employee.Name.Substring(0, 30)
-                    : employee.Name;
-                ((FbCommand)command).Parameters.Add("@SURNAME", FbDbType.VarChar).Value = employee.LastName.Length > 30
-                    ? employee.LastName.Substring(0, 30)
-                    : employee.LastName;
-                ((FbCommand)command).Parameters.Add("@EMPLOYMENTDATE", FbDbType.TimeStamp).Value = DateTime.Now;
-                ((FbCommand)command).Parameters.Add("@DISCHARGEDATE", FbDbType.TimeStamp).Value = DateTime.Now;
-                ((FbCommand)command).Parameters.Add("@BIRTHDATE", FbDbType.TimeStamp).Value = DateTime.Now;
-                ((FbCommand)command).Parameters.Add("@BIRTHDATE", FbDbType.TimeStamp).Value = DateTime.Now;
-                ((FbCommand)command).Parameters.Add("@ABSENTFROM", FbDbType.TimeStamp).Value = DateTime.MinValue;
-                ((FbCommand)command).Parameters.Add("@ABSENTTO", FbDbType.TimeStamp).Value = DateTime.MinValue;
-                ((FbCommand)command).Parameters.Add("@DEPARTMENT", FbDbType.VarChar).Value = employee.DepartmentNo;
-                ((FbCommand)command).Parameters.Add("@COMPANY", FbDbType.VarChar).Value = employee.Employer;
+                ((FbCommand) command).Parameters.Add("@NAME", FbDbType.VarChar).Value = employee.Name.Length > 30
+                    ? employee.Name.Substring(0, 30).ToUpper()
+                    : employee.Name.ToUpper();
+                ((FbCommand) command).Parameters.Add("@SURNAME", FbDbType.VarChar).Value = employee.LastName.Length > 30
+                    ? employee.LastName.Substring(0, 30).ToUpper()
+                    : employee.LastName.ToUpper();
+                ((FbCommand) command).Parameters.Add("@EMPLOYMENTDATE", FbDbType.TimeStamp).Value = DateTime.Now;
+                ((FbCommand) command).Parameters.Add("@DISCHARGEDATE", FbDbType.TimeStamp).Value = DateTime.Now;
+                ((FbCommand) command).Parameters.Add("@BIRTHDATE", FbDbType.TimeStamp).Value = DateTime.Now;
+                ((FbCommand) command).Parameters.Add("@ABSENTFROM", FbDbType.TimeStamp).Value = DateTime.MinValue;
+                ((FbCommand) command).Parameters.Add("@ABSENTTO", FbDbType.TimeStamp).Value = DateTime.MinValue;
+                ((FbCommand) command).Parameters.Add("@DEPARTMENT", FbDbType.VarChar).Value = employee.DepartmentNo;
+                ((FbCommand) command).Parameters.Add("@COMPANY", FbDbType.VarChar).Value = employee.Employer == ""
+                    ? "1"
+                    : employee.Employer;
                 command.ExecuteNonQuery();
                 transaction.Commit();
-
-                connection.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -838,23 +1003,80 @@ namespace TM_Impronet_Interface
                                       "" +
                                       "VALUES " +
                                       "(@BUTTONNO, @BUTTONHLDR, @EXPIRY)";
-                ((FbCommand)command).Parameters.Add("@BUTTONNO", FbDbType.VarChar).Value = employee.CardNumber.Length > 10
+                ((FbCommand) command).Parameters.Add("@BUTTONNO", FbDbType.VarChar).Value = employee.CardNumber.Length >
+                                                                                            10
                     ? employee.CardNumber.Substring(0, 10)
                     : employee.CardNumber;
-                ((FbCommand)command).Parameters.Add("@BUTTONHLDR", FbDbType.VarChar).Value = employee.EmployeeeNo.Length > 10
-                    ? employee.EmployeeeNo.Substring(0, 10)
-                    : employee.EmployeeeNo;
+                ((FbCommand) command).Parameters.Add("@BUTTONHLDR", FbDbType.VarChar).Value =
+                    employee.EmployeeeNo.Length > 10
+                        ? employee.EmployeeeNo.Substring(0, 10)
+                        : employee.EmployeeeNo;
                 ((FbCommand) command).Parameters.Add("@EXPIRY", FbDbType.Date).Value = DateTime.MaxValue;
-                
+
                 command.ExecuteNonQuery();
                 transaction.Commit();
-
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
                 connection.Close();
+                    connection.Dispose();
+            }
+        }
+
+        private static void CreateTmpRosterDate(IDbConnection connection, IDbCommand command, RosterDate rosterDate)
+        {
+            try
+            {
+                command.Connection = connection;
+                connection.Open();
+
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                command.CommandText = "INSERT INTO ROSTERDATES " +
+                                      "(CODE, ROSTERDATE, SHIFTS, DEDUCTHOURS, DEDUCTNT, DEDUCTOT1, DEDUCTOT2, DEDUCTOT3, DEDUCTOT4, TARGETNT, TARGETOT1, TARGETOT2, TARGETOT3, TARGETOT4, BALANCINGDIRECTION, MAXOT0, MAXOT1, MAXOT2, MAXOT3, MAXOT4) " +
+                                      "" +
+                                      "VALUES " +
+                                      "(@CODE, @ROSTERDATE, @SHIFTS, @DEDUCTHOURS, @DEDUCTNT, @DEDUCTOT1, @DEDUCTOT2, @DEDUCTOT3, @DEDUCTOT4, @TARGETNT, @TARGETOT1, @TARGETOT2, @TARGETOT3, @TARGETOT4, @BALANCINGDIRECTION, @MAXOT0, @MAXOT1, @MAXOT2, @MAXOT3, @MAXOT4)";
+
+                ((FbCommand) command).Parameters.Add("@CODE", FbDbType.VarChar).Value = rosterDate.Code;
+                ((FbCommand) command).Parameters.Add("@ROSTERDATE", FbDbType.Date).Value = rosterDate.StartDate;
+                ((FbCommand) command).Parameters.Add("@SHIFTS", FbDbType.VarChar).Value = rosterDate.Shifts;
+                ((FbCommand) command).Parameters.Add("@DEDUCTHOURS", FbDbType.Char).Value = rosterDate.DeductHours;
+                ((FbCommand) command).Parameters.Add("@DEDUCTNT", FbDbType.Char).Value = rosterDate.DeductNt;
+                ((FbCommand) command).Parameters.Add("@DEDUCTOT1", FbDbType.Char).Value = rosterDate.DeductOt1;
+                ((FbCommand) command).Parameters.Add("@DEDUCTOT2", FbDbType.Char).Value = rosterDate.DeductOt2;
+                ((FbCommand) command).Parameters.Add("@DEDUCTOT3", FbDbType.Char).Value = rosterDate.DeductOt3;
+                ((FbCommand) command).Parameters.Add("@DEDUCTOT4", FbDbType.Char).Value = rosterDate.DeductOt4;
+                ((FbCommand) command).Parameters.Add("@TARGETNT", FbDbType.Integer).Value = rosterDate.TargetNt;
+                ((FbCommand) command).Parameters.Add("@TARGETOT1", FbDbType.Integer).Value = rosterDate.TargetOt1;
+                ((FbCommand) command).Parameters.Add("@TARGETOT2", FbDbType.Integer).Value = rosterDate.TargetOt2;
+                ((FbCommand) command).Parameters.Add("@TARGETOT3", FbDbType.Integer).Value = rosterDate.TargetOt3;
+                ((FbCommand) command).Parameters.Add("@TARGETOT4", FbDbType.Integer).Value = rosterDate.TargetOt4;
+                ((FbCommand) command).Parameters.Add("@BALANCINGDIRECTION", FbDbType.Char).Value =
+                    rosterDate.BalancingDirection;
+                ((FbCommand) command).Parameters.Add("@MAXOT0", FbDbType.Integer).Value = rosterDate.MaxOt0;
+                ((FbCommand) command).Parameters.Add("@MAXOT1", FbDbType.Integer).Value = rosterDate.MaxOt1;
+                ((FbCommand) command).Parameters.Add("@MAXOT2", FbDbType.Integer).Value = rosterDate.MaxOt2;
+                ((FbCommand) command).Parameters.Add("@MAXOT3", FbDbType.Integer).Value = rosterDate.MaxOt3;
+                ((FbCommand) command).Parameters.Add("@MAXOT4", FbDbType.Integer).Value = rosterDate.MaxOt4;
+
+                command.ExecuteNonQuery();
+                transaction.Commit();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
 
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -871,33 +1093,39 @@ namespace TM_Impronet_Interface
                 command.CommandText = "UPDATE EMP " +
                                       "SET ID_NUMBER = @IDNUMBER, NAME = @NAME, SURNAME = @SURNAME, DEPARTMENT = @DEPARTMENT, COMPANY = @COMPANY, DISCHARGED = @DISCHARGED " +
                                       "WHERE EMP_NO = @EMPNO";
-                ((FbCommand)command).Parameters.Add("@EMPNO", FbDbType.VarChar).Value = employee.EmployeeeNo.Length > 10
+                ((FbCommand) command).Parameters.Add("@EMPNO", FbDbType.VarChar).Value = employee.EmployeeeNo.Length >
+                                                                                         10
                     ? employee.EmployeeeNo.Substring(0, 10)
                     : employee.EmployeeeNo;
-                ((FbCommand)command).Parameters.Add("@IDNUMBER", FbDbType.VarChar).Value = employee.IdNumber.Length > 13
+                ((FbCommand) command).Parameters.Add("@IDNUMBER", FbDbType.VarChar).Value = employee.IdNumber.Length >
+                                                                                            13
                     ? employee.IdNumber.Substring(0, 13)
                     : employee.IdNumber;
-                ((FbCommand)command).Parameters.Add("@NAME", FbDbType.VarChar).Value = employee.Name.Length > 30
-                    ? employee.Name.Substring(0, 30)
-                    : employee.Name;
-                ((FbCommand)command).Parameters.Add("@SURNAME", FbDbType.VarChar).Value = employee.LastName.Length > 30
-                    ? employee.LastName.Substring(0, 30)
-                    : employee.LastName;
-                ((FbCommand)command).Parameters.Add("@DEPARTMENT", FbDbType.VarChar).Value = employee.DepartmentNo;
-                ((FbCommand)command).Parameters.Add("@COMPANY", FbDbType.VarChar).Value = employee.Employer;
+                ((FbCommand) command).Parameters.Add("@NAME", FbDbType.VarChar).Value = employee.Name.Length > 30
+                    ? employee.Name.Substring(0, 30).ToUpper()
+                    : employee.Name.ToUpper();
+                ((FbCommand) command).Parameters.Add("@SURNAME", FbDbType.VarChar).Value = employee.LastName.Length > 30
+                    ? employee.LastName.Substring(0, 30).ToUpper()
+                    : employee.LastName.ToUpper();
+                ((FbCommand) command).Parameters.Add("@DEPARTMENT", FbDbType.VarChar).Value = employee.DepartmentNo;
+                ((FbCommand) command).Parameters.Add("@COMPANY", FbDbType.VarChar).Value = employee.Employer == ""
+                    ? "1"
+                    : employee.Employer;
                 ((FbCommand) command).Parameters.Add("@DISCHARGED", FbDbType.Char).Value = employee.Suspended
                     ? 'Y'
                     : 'N';
 
                 command.ExecuteNonQuery();
                 transaction.Commit();
-
-                connection.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
@@ -910,12 +1138,26 @@ namespace TM_Impronet_Interface
 
                 //Save and get departments
                 SaveDepartments();
-                var deptObj = Settings.Default.SelectedDepartments;
-                if (deptObj == null)
-                    return;
 
-                var departments = deptObj.Cast<string>().Aggregate("", (current, dept) => current + $"'{dept}',");
-                departments = departments.TrimEnd(',');
+                var departments = "";
+                if (!Settings.Default.SyncAllDepartments)
+                {
+                    var deptObj = Settings.Default.SelectedDepartments;
+                    if (deptObj == null)
+                        return;
+
+                    departments =
+                        deptObj.Cast<string>().Aggregate("", (current, dept) => current + $"'{dept}',").TrimEnd(',');
+                }
+                else
+                {
+                    var departmentList = GetDepartments(GetConnectionObject(), GetCommandObject());
+                    if (departmentList == null)
+                        return;
+
+                    departments = departmentList.Aggregate("", (current, dept) => current + $"'{dept.Id}',")
+                        .TrimEnd(',');
+                }
 
                 var improDepartments = GetDepartments(GetConnectionObject(), GetCommandObject(), departments);
                 if (improDepartments == null)
@@ -929,7 +1171,7 @@ namespace TM_Impronet_Interface
                 //Determine if Companies already exist
                 foreach (var comp in improCompanies.Where(comp => tmpCompanies.All(i => i.Code != comp.Code)))
                 {
-                    //Create new employee in TMP
+                    //Create new company in TMP
                     CreateTmpCompany(GetTmpConnectionObject(), new FbCommand(),
                         new Company {Code = comp.Code, Description = "DEFAULT"});
                     Application.DoEvents();
@@ -953,33 +1195,63 @@ namespace TM_Impronet_Interface
 
                 //Determine if Employees already exist
                 var enumerable = improEmployees as Employee[] ?? improEmployees.ToArray();
-                foreach (
-                    var empl in
-                        enumerable.Where(
-                            empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo)))
+                if (Settings.Default.UseMSTSQ)
                 {
-                    //if (empl.Suspended)
-                    //    continue;
-                    //Create new employee in TMP                
-                    CreateTmpEmployee(GetTmpConnectionObject(), new FbCommand(), empl);
-                    newEmployees.Add($"Employee No: {empl.EmployeeeNo}, Name: {empl.Name}, Suname: {empl.LastName}");
-                    Application.DoEvents();
+                    foreach (
+                        var empl in
+                            enumerable.Where(
+                                empl => tmpEmployees.All(i => i.CardNumber != empl.CardNumber)))
+                    {
+                        //if (empl.Suspended)
+                        //    continue;
+                        //Create new employee in TMP                
+                        CreateTmpEmployee(GetTmpConnectionObject(), new FbCommand(), empl);
+                        CreateTmpCardNumber(GetTmpConnectionObject(), new FbCommand(), empl);
+                        newEmployees.Add($"Employee No: {empl.EmployeeeNo}, Name: {empl.Name}, Suname: {empl.LastName}");
+                        Application.DoEvents();
+                    }
+                }
+                else
+                {
+                    foreach (
+                        var empl in
+                            enumerable.Where(
+                                empl => tmpEmployees.All(i => i.EmployeeeNo != empl.EmployeeeNo)))
+                    {
+                        //if (empl.Suspended)
+                        //    continue;
+                        //Create new employee in TMP                
+                        CreateTmpEmployee(GetTmpConnectionObject(), new FbCommand(), empl);
+                        newEmployees.Add($"Employee No: {empl.EmployeeeNo}, Name: {empl.Name}, Suname: {empl.LastName}");
+                        Application.DoEvents();
+
+                    }
+
+                    //Determine if Employee card number already exist
+                    foreach (
+                        var empl in enumerable.Where(empl => tmpEmployees.All(i => i.CardNumber != empl.CardNumber)))
+                    {
+                        //Add TMP Card Number
+                        CreateTmpCardNumber(GetTmpConnectionObject(), new FbCommand(), empl);
+                        Application.DoEvents();
+                    }
                 }
 
-                //Determine if Employee card number already exist
-                foreach (var empl in enumerable.Where(empl => tmpEmployees.All(i => i.CardNumber != empl.CardNumber)))
-                {
-                    //Add TMP Card Number
-                    CreateTmpCardNumber(GetTmpConnectionObject(), new FbCommand(), empl);
-                    Application.DoEvents();
-                }
+
 
                 var employees = tmpEmployees as IList<Employee> ?? tmpEmployees.ToList();
                 foreach (var improEmployee in enumerable)
                 {
                     foreach (var tmpEmployee in employees)
                     {
-                        if (improEmployee.EmployeeeNo != tmpEmployee.EmployeeeNo) continue;
+                        if (Settings.Default.UseMSTSQ)
+                        {
+                            if (improEmployee.CardNumber != tmpEmployee.CardNumber) continue;
+                        }
+                        else
+                        {
+                            if (improEmployee.EmployeeeNo != tmpEmployee.EmployeeeNo) continue;
+                        }
                         if (improEmployee.DepartmentNo != tmpEmployee.DepartmentNo ||
                             improEmployee.Suspended != tmpEmployee.Suspended)
                         {
@@ -997,6 +1269,7 @@ namespace TM_Impronet_Interface
                     html += "\nKind Regards\nThe TMP Team";
                     Send_Email(txtToEmailAddress.Text, "New Employees Added to Time Manager Platinum", html);
                 }
+
             }
             finally
             {
@@ -1006,15 +1279,22 @@ namespace TM_Impronet_Interface
 
         private void UpdateProcessed(IDbConnection connection, IDbCommand command)
         {
-            connection.Open();
+            try
+            {
+                connection.Open();
 
-            var myTransaction = connection.BeginTransaction();
-            command.Connection = connection;
-            command.Transaction = myTransaction;
-            command.CommandText = "UPDATE TRANSACK SET TR_PROCESSED = 1 WHERE TR_PROCESSED = 0";
-            command.ExecuteNonQuery();
-            myTransaction.Commit();
-            connection.Close();
+                var myTransaction = connection.BeginTransaction();
+                command.Connection = connection;
+                command.Transaction = myTransaction;
+                command.CommandText = "UPDATE TRANSACK SET TR_PROCESSED = 1 WHERE TR_PROCESSED = 0";
+                command.ExecuteNonQuery();
+                myTransaction.Commit();
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -1058,18 +1338,22 @@ namespace TM_Impronet_Interface
                 gridMappings.DataSource = dsTerminalMapping.Tables[0];
 
                 command.Dispose();
-                connection.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+                connection.Dispose();
             }
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
             var toSave = new DataSet();
-            toSave.Tables.Add(((DataTable)gridMappings.DataSource).Copy());
+            toSave.Tables.Add(((DataTable) gridMappings.DataSource).Copy());
 
             var lstMappings = (from DataRow dr in toSave.Tables[0].Rows
                 where dr["MAPPING"].ToString() != ""
@@ -1153,11 +1437,11 @@ namespace TM_Impronet_Interface
         {
             if (!chkRunnerEnabled.Checked) return;
             if (txtRunner.Text != "")
-            {                    
+            {
                 System.Diagnostics.Process.Start(txtRunner.Text);
             }
         }
-       
+
         private void chkRunnerEnabled_CheckedChanged(object sender, EventArgs e)
         {
             Settings.Default.RunnerEnabled = chkRunnerEnabled.Checked;
@@ -1180,7 +1464,7 @@ namespace TM_Impronet_Interface
 
         private void txtReaderAddress_TextChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         private void txtInterval_TextChanged(object sender, EventArgs e)
@@ -1195,6 +1479,7 @@ namespace TM_Impronet_Interface
             lblSyncCountDown.Text = $"{_syncSeconds} second(s)";
             if (_syncSeconds == 0 && !_bSyncRunning)
             {
+                lblSyncCountDown.Text = @"Sync in progress";
                 tmrMain.Stop();
                 SyncEmployees();
                 _syncSeconds = Convert.ToInt32(txtSyncInterval.Text);
@@ -1299,7 +1584,7 @@ namespace TM_Impronet_Interface
                 return;
 
             var collection = new StringCollection();
-            foreach (var dept in from object item in items select ((Department)item).Id.ToString())
+            foreach (var dept in from object item in items select ((Department) item).Id.ToString())
             {
                 collection.Add(dept);
             }
@@ -1320,7 +1605,11 @@ namespace TM_Impronet_Interface
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            this.Text += " - " + Application.ProductVersion;
+            var nextMonth = DateTime.Now;
+            nextMonth = nextMonth.AddMonths(1);
 
+            dtDuplicateScheduleStartDate.Value = new DateTime(nextMonth.Year, nextMonth.Month, 1);
         }
 
         private void txtSqlConnectionString_TextChanged(object sender, EventArgs e)
@@ -1466,13 +1755,13 @@ namespace TM_Impronet_Interface
                 //Check all the child nodes.
                 var mapping = new DepartmentMapping
                 {
-                    Department = new Department {Id = Convert.ToInt32(node.Tag), Name = node.Text},
+                    Department = new Department {Id = node.Tag.ToString(), Name = node.Text},
                     Terminals = new List<Terminal>()
                 };
                 foreach (TreeNode childNode in node.Nodes)
                 {
                     if (childNode.Checked)
-                        mapping.Terminals.Add(new Terminal {Id = childNode.Tag.ToString(), Name = childNode.Text});                    
+                        mapping.Terminals.Add(new Terminal {Id = childNode.Tag.ToString(), Name = childNode.Text});
                 }
                 if (mapping.Terminals.Count > 0)
                     mappings.DepartmentMappingses.Add(mapping);
@@ -1486,7 +1775,10 @@ namespace TM_Impronet_Interface
 
         public void SerializeObject<T>(T serializableObject, string fileName)
         {
-            if (serializableObject == null) { return; }
+            if (serializableObject == null)
+            {
+                return;
+            }
 
             try
             {
@@ -1509,7 +1801,10 @@ namespace TM_Impronet_Interface
 
         public T DeSerializeObject<T>(string fileName)
         {
-            if (string.IsNullOrEmpty(fileName)) { return default(T); }
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return default(T);
+            }
 
             var objectOut = default(T);
 
@@ -1523,12 +1818,12 @@ namespace TM_Impronet_Interface
 
                 using (var read = new StringReader(xmlString))
                 {
-                    var outType = typeof(T);
+                    var outType = typeof (T);
 
                     var serializer = new XmlSerializer(outType);
                     using (XmlReader reader = new XmlTextReader(read))
                     {
-                        objectOut = (T)serializer.Deserialize(reader);
+                        objectOut = (T) serializer.Deserialize(reader);
                         reader.Close();
                     }
 
@@ -1621,6 +1916,115 @@ namespace TM_Impronet_Interface
         {
             Settings.Default.ToEmailAddress = txtToEmailAddress.Text;
             Settings.Default.Save();
+        }
+
+        private void btnTestEmail_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Send_Email(txtToEmailAddress.Text, "TMP Exporter Test Email", "Test Email");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.InnerException == null
+                    ? $"{ex.Message}"
+                    : $"{ex.Message} - {ex.InnerException.Message}");
+            }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.SyncAllDepartments = chkAlwaysSync.Checked;
+            Settings.Default.Save();
+        }
+
+        private void chkSyncMstsq_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.UseMSTSQ = chkSyncMstsq.Checked;
+            Settings.Default.Save();
+        }
+
+        private void CheckForDuplicateRosterDate(RosterDate rosterDate, string rosterCode)
+        {
+            var rosters = cmbRosters.Items.Cast<Roster>().ToList().Where(i => i.Code == rosterCode);
+            if (rosters.Any(roster => roster.RosterDates.Any(rosterDate.CheckIfOverlap)))
+            {
+                throw new Exception("An overlapping Roster date has been found. Please correct this before continuing");
+            }
+        }
+
+        private void btnGetRosters_Click(object sender, EventArgs e)
+        {
+            cmbRosters.Items.Clear();
+            var rosters = GetTmpRosters(GetTmpConnectionObject(), GetTmpCommandObject());
+            var enumerable = rosters as Roster[] ?? rosters.ToArray();
+            for (var i = 0; i < enumerable.Count(); i++)
+            {
+                GetTmpRosterDates(GetTmpConnectionObject(), GetTmpCommandObject(), ref enumerable[i]);
+                cmbRosters.Items.Add(enumerable[i]);
+            }
+
+            if (cmbRosters.Items.Count <= 0) return;
+            cmbRosters.SelectedIndex = 0;
+            if (cmbRosterStartMonth.Items.Count > 0)
+            {
+                cmbRosterStartMonth.SelectedIndex = 0;
+            }
+        }
+
+        private void cmbRosters_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cmbRosterStartMonth.Items.Clear();
+            var roster = (Roster) cmbRosters.SelectedItem;
+            foreach (var rosterDate in roster.RosterDates)
+            {
+                cmbRosterStartMonth.Items.Add(rosterDate);
+            }
+
+            if (cmbRosterStartMonth.Items.Count > 0)
+                cmbRosterStartMonth.SelectedIndex = 0;
+        }
+
+        private void btnDuplicateRoster_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (cmbRosters.SelectedIndex == -1)
+                {
+                    MessageBox.Show(@"Please select a roster");
+                    return;
+                }
+                if (cmbRosterStartMonth.SelectedIndex == -1)
+                {
+                    MessageBox.Show(@"Please select a roster date");
+                    return;
+                }
+
+                var roster = (Roster) cmbRosters.SelectedItem;
+                var rosterDate = (RosterDate) cmbRosterStartMonth.SelectedItem;
+
+
+                var amountOfMonths = numScheduleMonths.Value;
+                for (var i = 0; i < amountOfMonths; i++)
+                {
+                    var startDate = dtDuplicateScheduleStartDate.Value;
+                    if (i > 0)
+                    {
+                        var tempDate = startDate.AddMonths(i);
+                        startDate = new DateTime(tempDate.Year, tempDate.Month, 1);
+                    }
+                    var monthSchedule = rosterDate.CreateMonthSchedule(startDate);
+                    CheckForDuplicateRosterDate(monthSchedule, roster.Code);
+
+                    CreateTmpRosterDate(GetTmpConnectionObject(), GetCommandObject(), monthSchedule);
+                }
+
+                MessageBox.Show("Success!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void btnSync_Click(object sender, EventArgs e)

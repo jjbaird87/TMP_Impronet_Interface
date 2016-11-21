@@ -112,10 +112,13 @@
             this.label12 = new System.Windows.Forms.Label();
             this.chkDepartments = new System.Windows.Forms.CheckedListBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.chkSyncMstsq = new System.Windows.Forms.CheckBox();
+            this.chkAlwaysSync = new System.Windows.Forms.CheckBox();
             this.btnSync = new System.Windows.Forms.Button();
             this.chkSyncAccessControlDevices = new System.Windows.Forms.CheckBox();
             this.chkSynEmployees = new System.Windows.Forms.CheckBox();
             this.tabPgEmail = new System.Windows.Forms.TabPage();
+            this.btnTestEmail = new System.Windows.Forms.Button();
             this.txtToEmailAddress = new System.Windows.Forms.TextBox();
             this.label23 = new System.Windows.Forms.Label();
             this.txtEmailAddress = new System.Windows.Forms.TextBox();
@@ -130,6 +133,19 @@
             this.label20 = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
+            this.tabPage6 = new System.Windows.Forms.TabPage();
+            this.label29 = new System.Windows.Forms.Label();
+            this.dtDuplicateScheduleStartDate = new System.Windows.Forms.DateTimePicker();
+            this.label28 = new System.Windows.Forms.Label();
+            this.label27 = new System.Windows.Forms.Label();
+            this.numScheduleMonths = new System.Windows.Forms.NumericUpDown();
+            this.btnDuplicateRoster = new System.Windows.Forms.Button();
+            this.btnGetRosters = new System.Windows.Forms.Button();
+            this.label26 = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.cmbRosterStartMonth = new System.Windows.Forms.ComboBox();
+            this.cmbRosters = new System.Windows.Forms.ComboBox();
+            this.label24 = new System.Windows.Forms.Label();
             this.grpImportSettings.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -147,6 +163,8 @@
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPgEmail.SuspendLayout();
+            this.tabPage6.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numScheduleMonths)).BeginInit();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -538,6 +556,7 @@
             this.tabEmail.Controls.Add(this.tabPage2);
             this.tabEmail.Controls.Add(this.tabPage3);
             this.tabEmail.Controls.Add(this.tabPgEmail);
+            this.tabEmail.Controls.Add(this.tabPage6);
             this.tabEmail.Location = new System.Drawing.Point(212, 13);
             this.tabEmail.Name = "tabEmail";
             this.tabEmail.SelectedIndex = 0;
@@ -995,6 +1014,8 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.chkSyncMstsq);
+            this.tabPage3.Controls.Add(this.chkAlwaysSync);
             this.tabPage3.Controls.Add(this.btnSync);
             this.tabPage3.Controls.Add(this.chkSyncAccessControlDevices);
             this.tabPage3.Controls.Add(this.chkSynEmployees);
@@ -1005,6 +1026,29 @@
             this.tabPage3.Text = "Sync Options";
             this.tabPage3.UseVisualStyleBackColor = true;
             this.tabPage3.Click += new System.EventHandler(this.tabPage3_Click);
+            // 
+            // chkSyncMstsq
+            // 
+            this.chkSyncMstsq.AutoSize = true;
+            this.chkSyncMstsq.Location = new System.Drawing.Point(199, 53);
+            this.chkSyncMstsq.Name = "chkSyncMstsq";
+            this.chkSyncMstsq.Size = new System.Drawing.Size(224, 17);
+            this.chkSyncMstsq.TabIndex = 19;
+            this.chkSyncMstsq.Text = "Use MSTSQ instead of Employee Number";
+            this.chkSyncMstsq.UseVisualStyleBackColor = true;
+            this.chkSyncMstsq.CheckedChanged += new System.EventHandler(this.chkSyncMstsq_CheckedChanged);
+            // 
+            // chkAlwaysSync
+            // 
+            this.chkAlwaysSync.AutoSize = true;
+            this.chkAlwaysSync.Location = new System.Drawing.Point(199, 25);
+            this.chkAlwaysSync.Name = "chkAlwaysSync";
+            this.chkAlwaysSync.Size = new System.Drawing.Size(447, 17);
+            this.chkAlwaysSync.TabIndex = 18;
+            this.chkAlwaysSync.Text = "Always Sync ALL companies and departments (Department Selection Tab will be ignor" +
+    "ed)";
+            this.chkAlwaysSync.UseVisualStyleBackColor = true;
+            this.chkAlwaysSync.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
             // btnSync
             // 
@@ -1040,6 +1084,7 @@
             // 
             // tabPgEmail
             // 
+            this.tabPgEmail.Controls.Add(this.btnTestEmail);
             this.tabPgEmail.Controls.Add(this.txtToEmailAddress);
             this.tabPgEmail.Controls.Add(this.label23);
             this.tabPgEmail.Controls.Add(this.txtEmailAddress);
@@ -1061,6 +1106,16 @@
             this.tabPgEmail.TabIndex = 5;
             this.tabPgEmail.Text = "Email Options";
             this.tabPgEmail.UseVisualStyleBackColor = true;
+            // 
+            // btnTestEmail
+            // 
+            this.btnTestEmail.Location = new System.Drawing.Point(21, 231);
+            this.btnTestEmail.Name = "btnTestEmail";
+            this.btnTestEmail.Size = new System.Drawing.Size(774, 23);
+            this.btnTestEmail.TabIndex = 14;
+            this.btnTestEmail.Text = "Send Test Email";
+            this.btnTestEmail.UseVisualStyleBackColor = true;
+            this.btnTestEmail.Click += new System.EventHandler(this.btnTestEmail_Click);
             // 
             // txtToEmailAddress
             // 
@@ -1189,6 +1244,145 @@
             this.label18.TabIndex = 0;
             this.label18.Text = "SMTP Host:";
             // 
+            // tabPage6
+            // 
+            this.tabPage6.Controls.Add(this.label29);
+            this.tabPage6.Controls.Add(this.dtDuplicateScheduleStartDate);
+            this.tabPage6.Controls.Add(this.label28);
+            this.tabPage6.Controls.Add(this.label27);
+            this.tabPage6.Controls.Add(this.numScheduleMonths);
+            this.tabPage6.Controls.Add(this.btnDuplicateRoster);
+            this.tabPage6.Controls.Add(this.btnGetRosters);
+            this.tabPage6.Controls.Add(this.label26);
+            this.tabPage6.Controls.Add(this.label25);
+            this.tabPage6.Controls.Add(this.cmbRosterStartMonth);
+            this.tabPage6.Controls.Add(this.cmbRosters);
+            this.tabPage6.Controls.Add(this.label24);
+            this.tabPage6.Location = new System.Drawing.Point(4, 22);
+            this.tabPage6.Name = "tabPage6";
+            this.tabPage6.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage6.Size = new System.Drawing.Size(816, 424);
+            this.tabPage6.TabIndex = 6;
+            this.tabPage6.Text = "Roster Duplication Tool";
+            this.tabPage6.UseVisualStyleBackColor = true;
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(9, 172);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(58, 13);
+            this.label29.TabIndex = 11;
+            this.label29.Text = "Start Date:";
+            // 
+            // dtDuplicateScheduleStartDate
+            // 
+            this.dtDuplicateScheduleStartDate.Location = new System.Drawing.Point(121, 166);
+            this.dtDuplicateScheduleStartDate.Name = "dtDuplicateScheduleStartDate";
+            this.dtDuplicateScheduleStartDate.Size = new System.Drawing.Size(200, 20);
+            this.dtDuplicateScheduleStartDate.TabIndex = 10;
+            // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(247, 194);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(41, 13);
+            this.label28.TabIndex = 9;
+            this.label28.Text = "months";
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(9, 193);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(101, 13);
+            this.label27.TabIndex = 8;
+            this.label27.Text = "Duplicate Roster for";
+            // 
+            // numScheduleMonths
+            // 
+            this.numScheduleMonths.Location = new System.Drawing.Point(121, 192);
+            this.numScheduleMonths.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numScheduleMonths.Name = "numScheduleMonths";
+            this.numScheduleMonths.Size = new System.Drawing.Size(120, 20);
+            this.numScheduleMonths.TabIndex = 7;
+            this.numScheduleMonths.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // btnDuplicateRoster
+            // 
+            this.btnDuplicateRoster.Location = new System.Drawing.Point(9, 218);
+            this.btnDuplicateRoster.Name = "btnDuplicateRoster";
+            this.btnDuplicateRoster.Size = new System.Drawing.Size(787, 23);
+            this.btnDuplicateRoster.TabIndex = 6;
+            this.btnDuplicateRoster.Text = "Duplicate Rosters";
+            this.btnDuplicateRoster.UseVisualStyleBackColor = true;
+            this.btnDuplicateRoster.Click += new System.EventHandler(this.btnDuplicateRoster_Click);
+            // 
+            // btnGetRosters
+            // 
+            this.btnGetRosters.Location = new System.Drawing.Point(9, 22);
+            this.btnGetRosters.Name = "btnGetRosters";
+            this.btnGetRosters.Size = new System.Drawing.Size(117, 23);
+            this.btnGetRosters.TabIndex = 5;
+            this.btnGetRosters.Text = "Get Rosters";
+            this.btnGetRosters.UseVisualStyleBackColor = true;
+            this.btnGetRosters.Click += new System.EventHandler(this.btnGetRosters_Click);
+            // 
+            // label26
+            // 
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(356, 89);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(125, 13);
+            this.label26.TabIndex = 4;
+            this.label26.Text = "Roster Start Date (Days):";
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(6, 89);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(72, 13);
+            this.label25.TabIndex = 3;
+            this.label25.Text = "Roster Name:";
+            // 
+            // cmbRosterStartMonth
+            // 
+            this.cmbRosterStartMonth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbRosterStartMonth.FormattingEnabled = true;
+            this.cmbRosterStartMonth.Location = new System.Drawing.Point(359, 110);
+            this.cmbRosterStartMonth.Name = "cmbRosterStartMonth";
+            this.cmbRosterStartMonth.Size = new System.Drawing.Size(207, 21);
+            this.cmbRosterStartMonth.TabIndex = 2;
+            // 
+            // cmbRosters
+            // 
+            this.cmbRosters.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbRosters.FormattingEnabled = true;
+            this.cmbRosters.Location = new System.Drawing.Point(9, 110);
+            this.cmbRosters.Name = "cmbRosters";
+            this.cmbRosters.Size = new System.Drawing.Size(343, 21);
+            this.cmbRosters.TabIndex = 1;
+            this.cmbRosters.SelectedIndexChanged += new System.EventHandler(this.cmbRosters_SelectedIndexChanged);
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(6, 69);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(218, 13);
+            this.label24.TabIndex = 0;
+            this.label24.Text = "Select a roster name and month to duplicate:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1230,6 +1424,9 @@
             this.tabPage3.PerformLayout();
             this.tabPgEmail.ResumeLayout(false);
             this.tabPgEmail.PerformLayout();
+            this.tabPage6.ResumeLayout(false);
+            this.tabPage6.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numScheduleMonths)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1338,6 +1535,22 @@
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.TextBox txtToEmailAddress;
         private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Button btnTestEmail;
+        private System.Windows.Forms.CheckBox chkAlwaysSync;
+        private System.Windows.Forms.CheckBox chkSyncMstsq;
+        private System.Windows.Forms.TabPage tabPage6;
+        private System.Windows.Forms.Button btnGetRosters;
+        private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.ComboBox cmbRosterStartMonth;
+        private System.Windows.Forms.ComboBox cmbRosters;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.NumericUpDown numScheduleMonths;
+        private System.Windows.Forms.Button btnDuplicateRoster;
+        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.DateTimePicker dtDuplicateScheduleStartDate;
     }
 }
 

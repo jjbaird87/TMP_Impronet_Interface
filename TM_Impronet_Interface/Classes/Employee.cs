@@ -14,7 +14,7 @@
 
         public string IdNumber { get; set; }
 
-        public int DepartmentNo { get; set; }
+        public string DepartmentNo { get; set; }
         public bool Suspended { get; set; }
     }
 }
