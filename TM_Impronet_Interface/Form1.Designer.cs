@@ -494,9 +494,9 @@
             this.chkEnableTimer.AutoSize = true;
             this.chkEnableTimer.Location = new System.Drawing.Point(134, 54);
             this.chkEnableTimer.Name = "chkEnableTimer";
-            this.chkEnableTimer.Size = new System.Drawing.Size(100, 17);
+            this.chkEnableTimer.Size = new System.Drawing.Size(133, 17);
             this.chkEnableTimer.TabIndex = 13;
-            this.chkEnableTimer.Text = "Timer Enabled?";
+            this.chkEnableTimer.Text = "Export Timer Enabled?";
             this.chkEnableTimer.UseVisualStyleBackColor = true;
             this.chkEnableTimer.CheckedChanged += new System.EventHandler(this.chkEnableTimer_CheckedChanged);
             // 
@@ -741,11 +741,11 @@
             // chkSyncTimerEnabled
             // 
             this.chkSyncTimerEnabled.AutoSize = true;
-            this.chkSyncTimerEnabled.Location = new System.Drawing.Point(240, 52);
+            this.chkSyncTimerEnabled.Location = new System.Drawing.Point(273, 52);
             this.chkSyncTimerEnabled.Name = "chkSyncTimerEnabled";
-            this.chkSyncTimerEnabled.Size = new System.Drawing.Size(127, 17);
+            this.chkSyncTimerEnabled.Size = new System.Drawing.Size(153, 17);
             this.chkSyncTimerEnabled.TabIndex = 20;
-            this.chkSyncTimerEnabled.Text = "Sync Timer Enabled?";
+            this.chkSyncTimerEnabled.Text = "Data Sync Timer Enabled?";
             this.chkSyncTimerEnabled.UseVisualStyleBackColor = true;
             this.chkSyncTimerEnabled.CheckedChanged += new System.EventHandler(this.chkSyncTimerEnabled_CheckedChanged);
             // 
@@ -1393,6 +1393,7 @@
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.grpImportSettings);
             this.Name = "Form1";
+            this.ShowIcon = false;
             this.Text = "Impro to Time Manager Conversion Tool";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.grpImportSettings.ResumeLayout(false);

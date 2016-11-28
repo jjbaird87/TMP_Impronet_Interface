@@ -108,7 +108,7 @@ namespace TM_Impronet_Interface
             var connectionString =
                 "User=SYSDBA;" +
                 "Password=masterkey;" +
-                "Database=" + txtFbDatabasePath.Text + ";" +
+                "Database=" + Settings.Default.FirebirdDatabasePath + ";" +
                 "DataSource=localhost;" +
                 "Port=3050;" +
                 "Dialect=3;" +
@@ -126,7 +126,7 @@ namespace TM_Impronet_Interface
             var connectionString =
                 "User=SYSDBA;" +
                 "Password=masterkey;" +
-                "Database=" + txtTmpDatabasePath.Text + ";" +
+                "Database=" + Settings.Default.TMPDatabaseLocation + ";" +
                 "DataSource=localhost;" +
                 "Port=3050;" +
                 "Dialect=3;" +
@@ -168,7 +168,12 @@ namespace TM_Impronet_Interface
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            Process(dtFromDate.Value, dtToDate.Value, GetConnectionObject(), GetCommandObject());
+            if (!_bRunning)
+                Process(dtFromDate.Value, dtToDate.Value, GetConnectionObject(), GetCommandObject());
+            else
+            {
+                MessageBox.Show(@"Export Already Running");
+            }
         }
 
         private bool CheckAllFieldsValid()
@@ -215,6 +220,9 @@ namespace TM_Impronet_Interface
             //FileStream fs = new FileStream(@txtOutputPath.Text, FileMode.OpenOrCreate);
             //StreamWriter binaryfile = new StreamWriter(fs);
             var iCounter = 0;
+            //Create a list for all of the rows for in memory processing
+            var fileOutput = new List<string>();
+            var iCount = 0;
 
             try
             {
@@ -260,7 +268,7 @@ namespace TM_Impronet_Interface
                     ((SqlCommand) command).Parameters.Add("@END_DATE", SqlDbType.Int).Value = endDate.ToString("yyyMMdd");
                 }
 
-                var iCount = command.ExecuteScalar();
+                iCount = Convert.ToInt32(command.ExecuteScalar());
                 toolStripProgressBar1.Maximum = Convert.ToInt32(iCount);
                 toolStripStatusLabel1.Text = iCount + @" record(s) found";
 
@@ -297,7 +305,9 @@ namespace TM_Impronet_Interface
                     }
                 }
 
+                command.CommandTimeout = 0;
                 var myReader = command.ExecuteReader();
+
 
                 //Read Current Mappings
                 var full = Settings.Default.Mappings;
@@ -308,6 +318,8 @@ namespace TM_Impronet_Interface
                     departmentMappings =
                         DeSerializeObject<DepartmentMappings>("DepartmentMappings.mxl").DepartmentMappingses;
                 }
+
+
 
                 while (myReader.Read())
                 {
@@ -411,42 +423,44 @@ namespace TM_Impronet_Interface
                                 continue;
                             }
                         var line = $"{employeeNo} {date} {time} {direction} {sFound}{Environment.NewLine}";
-                        using (var sw = new StreamWriter(txtOutputPath.Text, true))
-                        {
-                            sw.Write(line);
-                        }
+                        fileOutput.Add(line);
+                        //using (var sw = new StreamWriter(txtOutputPath.Text, true))
+                        //{
+                        //    sw.Write(line);
+                        //}
                     }
 
                     Application.DoEvents();
                 }
-
-
-                if (_bAutomated)
-                {
-                    UpdateProcessed(connection, command);
-                }
-
-                toolStripStatusLabel1.Text =
-                    $"{iCount} record(s) processed and {unProcessed} record(s) skipped due to no mappings";
-
-                command.Dispose();
-
-                if (!_bAutomated)
-                    MessageBox.Show(@"Operation completed successfully");
-
-                RunExe();
-
-                _bRunning = false;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + @" Row: " + iCounter);
+                MessageBox.Show(ex.Message + @" Row: " + iCounter + "\n\n" + ex);
             }
             finally
             {
                 connection.Close();
-                connection.Dispose();
+                _bRunning = false;
             }
+
+            File.AppendAllLines(txtOutputPath.Text, fileOutput);
+
+            if (_bAutomated)
+            {
+                UpdateProcessed(connection, command);
+            }
+
+            toolStripStatusLabel1.Text =
+                $"{iCount} record(s) processed and {unProcessed} record(s) skipped due to no mappings";
+
+            command.Dispose();
+
+            if (!_bAutomated)
+                MessageBox.Show(@"Operation completed successfully");
+
+            RunExe();
+
+            
         }
 
         private static List<Department> GetDepartments(IDbConnection connection, IDbCommand command)
@@ -528,7 +542,7 @@ namespace TM_Impronet_Interface
             }
         }
 
-        private static List<Company> GetImproCompanies(IDbConnection connection, IDbCommand command)
+        private static IEnumerable<Company> GetImproCompanies(IDbConnection connection, IDbCommand command)
         {
             try
             {
@@ -1237,8 +1251,6 @@ namespace TM_Impronet_Interface
                     }
                 }
 
-
-
                 var employees = tmpEmployees as IList<Employee> ?? tmpEmployees.ToList();
                 foreach (var improEmployee in enumerable)
                 {
@@ -1293,7 +1305,6 @@ namespace TM_Impronet_Interface
             finally
             {
                 connection.Close();
-                connection.Dispose();
             }
         }
 
@@ -1498,7 +1509,11 @@ namespace TM_Impronet_Interface
             {
                 tmrSeconds.Stop();
                 _bAutomated = true;
-                Process(GetLowestDT(DateTime.Now), GetHighestDt(DateTime.Now), GetConnectionObject(), GetCommandObject());
+
+                dtFromDate.Value = GetLowestDT(DateTime.Now);
+                dtToDate.Value = GetHighestDt(DateTime.Now);
+
+                Process(GetLowestDT(DateTime.Now), GetHighestDt(DateTime.Now), GetConnectionObject(), GetCommandObject());                
                 _seconds = Convert.ToInt32(txtInterval.Text);
                 _bAutomated = false;
                 tmrSeconds.Start();
@@ -2019,7 +2034,7 @@ namespace TM_Impronet_Interface
                     CreateTmpRosterDate(GetTmpConnectionObject(), GetCommandObject(), monthSchedule);
                 }
 
-                MessageBox.Show("Success!");
+                MessageBox.Show(@"Success!");
             }
             catch (Exception ex)
             {
