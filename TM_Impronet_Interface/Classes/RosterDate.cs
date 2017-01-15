@@ -47,7 +47,7 @@ namespace TM_Impronet_Interface.Classes
 
         public override string ToString()
         {            
-            return StartDate.ToString("dd-MMM-yyyy") + $" ({Shifts.Split(',').Count()})";
+            return StartDate.ToString("dd-MMM-yyyy") + $" ({Shifts.Split(',').Count(i => i!="")})";
         }
 
         public object Clone()
@@ -107,15 +107,38 @@ namespace TM_Impronet_Interface.Classes
             return rosterDate;
         }
 
+        public RosterDate CreateWeekSchedule(DateTime startDate, short numberOfWeeks)
+        {
+            var weekSchedule = (List<string>)GetFirstWeekSchedule();
+            var schedule = new List<string>();
+
+            for (var i = 0; i < numberOfWeeks; i++)
+            {
+                schedule.AddRange(weekSchedule);
+            }
+            //var scheduleCount = schedule.Count;
+            //for (var i = 0; i < 32 - scheduleCount; i++)
+            //{
+            //    schedule.Add("");
+            //}
+
+            var rosterDate = (RosterDate)Clone();
+            rosterDate.StartDate = startDate;
+            rosterDate.Shifts =
+                schedule.Aggregate(string.Empty, (current, s) => current + (s + ","));
+            //rosterDate.Shifts = rosterDate.Shifts.Remove(rosterDate.Shifts.Length - 1, 1);
+            return rosterDate;
+        }
+
         public bool CheckIfOverlap(RosterDate checkRosterDate)
         {
             //Reference Range
-            var daysInSchedule = new List<string>(checkRosterDate.Shifts.Split(',')).Count;
+            var daysInSchedule = new List<string>(checkRosterDate.Shifts.Split(',').Where(i=>i!="")).Count;
             var refStart = checkRosterDate.StartDate;
             var refEnd = checkRosterDate.StartDate.AddDays(daysInSchedule);
 
             //Class Range
-            var cdaysInSchedule = new List<string>(Shifts.Split(',')).Count;
+            var cdaysInSchedule = new List<string>(Shifts.Split(',').Where(i => i != "")).Count;
             var cStart = StartDate;
             var cEnd = StartDate.AddDays(cdaysInSchedule);
 

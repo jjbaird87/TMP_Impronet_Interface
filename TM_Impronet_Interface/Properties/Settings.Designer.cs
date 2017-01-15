@@ -357,5 +357,29 @@ namespace TM_Impronet_Interface.Properties {
                 this["UseMSTSQ"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DuplicateMonths {
+            get {
+                return ((bool)(this["DuplicateMonths"]));
+            }
+            set {
+                this["DuplicateMonths"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UpdateEmployeeNumber {
+            get {
+                return ((bool)(this["UpdateEmployeeNumber"]));
+            }
+            set {
+                this["UpdateEmployeeNumber"] = value;
+            }
+        }
     }
 }
